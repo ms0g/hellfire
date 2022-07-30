@@ -1,0 +1,22 @@
+cmake_minimum_required(VERSION 3.20)
+project(hellfire)
+
+set(CMAKE_CXX_STANDARD 20)
+
+set(KERNEL_MODULE "${PROJECT_NAME}.ko")
+set(DRIVER_PATH "src/driver/")
+set(SCRIPTS_PATH "scripts/")
+
+file(GLOB_RECURSE SOURCES "src/cli/*")
+
+execute_process(COMMAND make
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${DRIVER_PATH}
+)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_PATH}
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${DRIVER_PATH}/${KERNEL_MODULE}
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+add_executable(${PROJECT_NAME} ${SOURCES})

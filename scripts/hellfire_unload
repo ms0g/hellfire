@@ -1,0 +1,9 @@
+#!/bin/bash
+module="hellfire"
+device="hellfire"
+
+# invoke rmmod with all arguments we got
+rmmod -f $module || exit 1
+
+# Remove stale nodes
+rm -f /dev/${device}
