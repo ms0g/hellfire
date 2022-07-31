@@ -26,8 +26,8 @@ MODULE_VERSION("0.1");
 #define BUFFER_SIZE 100
 
 int ret;
-dev_t dev_num;
 int major_number;
+dev_t dev_num;
 struct cdev* mcdev;
 static struct nf_hook_ops* ipingressho = NULL;
 static struct nf_hook_ops* ipegressho = NULL;
@@ -158,7 +158,7 @@ static const struct file_operations fops = {    /* these are the file operations
 static int __init hellfire_init(void) {
     /* Initialize IP Inbound netfilter hook */
     ipingressho = (struct nf_hook_ops*) kcalloc(1, sizeof(struct nf_hook_ops), GFP_KERNEL);
-    ipingressho->hook = (nf_hookfn*) ip_ingress_hook;  /* hook function */
+    ipingressho->hook = (nf_hookfn*) ip_ingress_hook;   /* hook function */
     ipingressho->hooknum = NF_INET_PRE_ROUTING;         /* incoming packets */
     ipingressho->pf = NFPROTO_IPV4;                     /* IP */
     ipingressho->priority = NF_IP_PRI_FIRST;
@@ -167,7 +167,7 @@ static int __init hellfire_init(void) {
 
     /* Initialize IP Outbound netfilter hook */
     ipegressho = (struct nf_hook_ops*) kcalloc(1, sizeof(struct nf_hook_ops), GFP_KERNEL);
-    ipegressho->hook = (nf_hookfn*) ip_egress_hook;    /* hook function */
+    ipegressho->hook = (nf_hookfn*) ip_egress_hook;     /* hook function */
     ipegressho->hooknum = NF_INET_POST_ROUTING;         /* outgoing packets */
     ipegressho->pf = NFPROTO_IPV4;                      /* IP */
     ipegressho->priority = NF_IP_PRI_FIRST;

@@ -7,29 +7,30 @@
 LIST_HEAD(policy_table);
 
 DEFINE_SPINLOCK(slock);
+unsigned long flags;
 
 policy_t* find_policy(int id, enum packet_dest_t dest, char* in, char* out, char* pro,
                       u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
 
-    spin_lock(&slock);
+    spin_lock_irqsave(&slock, flags);
     list_for_each_entry(entry, &policy_table, list) {
         if (entry->id == id) {
-            spin_unlock(&slock);
+            spin_unlock_irqrestore(&slock, flags);
             return entry;
         } else if (dest == INPUT && entry->dest == INPUT) {
             if (check_if_input(entry, in, pro, sip, dport)) {
-                spin_unlock(&slock);
+                spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
         } else if (dest == OUTPUT && entry->dest == OUTPUT) {
             if (check_if_output(entry, out, pro, dip, sport)) {
-                spin_unlock(&slock);
+                spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
         }
     }
-    spin_unlock(&slock);
+    spin_unlock_irqrestore(&slock, flags);
     return NULL;
 }
 
@@ -175,9 +176,9 @@ void create_policy(char* pol) {
     }
     INIT_LIST_HEAD(&p->list);
 
-    spin_lock(&slock);
+    spin_lock_irqsave(&slock, flags);
     list_add_tail(&p->list, &policy_table);
-    spin_unlock(&slock);
+    spin_unlock_irqrestore(&slock, flags);
     ++id;
 }
 
@@ -185,7 +186,7 @@ void delete_policy(int id, enum packet_dest_t dest) {
     struct list_head* curr, *next;
     policy_t* entry;
 
-    spin_lock(&slock);
+    spin_lock_irqsave(&slock, flags);
     list_for_each_safe(curr, next, &policy_table) {
         entry = list_entry(curr, policy_t, list);
         if (entry->id == id) {
@@ -201,17 +202,16 @@ void delete_policy(int id, enum packet_dest_t dest) {
             if (entry->pro)
                 kfree(entry->pro);
             kfree(entry);
-
+            spin_unlock_irqrestore(&slock, flags);
         }
     }
-    spin_unlock(&slock);
 }
 
 void clean_policy_table(void) {
     struct list_head* curr, *next;
     policy_t* entry;
 
-    spin_lock(&slock);
+    spin_lock_irqsave(&slock, flags);
     list_for_each_safe(curr, next, &policy_table) {
         entry = list_entry(curr, policy_t, list);
         list_del(&entry->list);
@@ -227,5 +227,5 @@ void clean_policy_table(void) {
             kfree(entry->pro);
         kfree(entry);
     }
-    spin_unlock(&slock);
+    spin_unlock_irqrestore(&slock, flags);
 }
