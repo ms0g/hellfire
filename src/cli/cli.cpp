@@ -27,6 +27,7 @@ int main(int argc, char** argv) {
                                "-D, --delete                Delete policy[INPUT/OUTPUT]\n   "
                                "-L, --list                  List policies[INPUT/OUTPUT]\n   "
                                "-F, --flush                 Delete all policies[all]\n   "
+                               "-n, --num                   Policy id(only with -L and -D option)\n   "
                                "-i, --in-interface          Name of an interface via which a packet was received (only for packets entering the INPUT)\n   "
                                "-o, --out-interface         Name of an interface via which a packet is going to be sent (only for packets entering OUTPUT)\n   "
                                "-p, --protocol              The protocol of the rule or of the packet to check\n   "

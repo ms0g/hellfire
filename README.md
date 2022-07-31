@@ -65,6 +65,7 @@ Usage:  curser [ -<flag> [<val>] | --<name> [<val>] ]...
    -D, --delete                Delete policy[INPUT/OUTPUT]
    -L, --list                  List policies[INPUT/OUTPUT]
    -F, --flush                 Delete all policies[all]
+   -n, --num                   Policy id(only with -L and -D option)
    -i, --in-interface          Name of an interface via which a packet was received (only for packets entering the INPUT)
    -o, --out-interface         Name of an interface via which a packet is going to be sent (only for packets entering OUTPUT)
    -p, --protocol              The protocol of the rule or of the packet to check
