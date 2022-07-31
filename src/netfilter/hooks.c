@@ -26,20 +26,23 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
     } else if (iph->protocol == IPPROTO_UDP) {
         udp = udp_hdr(skb);
         dport = ntohs(udp->dest);
+
         pol = find_policy(0, INPUT, dev->name, NULL, "udp", sip, 0, 0, dport, 0);
     } else if (iph->protocol == IPPROTO_TCP) {
         tcp = tcp_hdr(skb);
         dport = ntohs(tcp->dest);
+
         pol = find_policy(0, INPUT, dev->name, NULL, "tcp", sip, 0, 0, dport, 0);
     }
 
     if (pol) {
         if (pol->target == DROP) {
-            printk(KERN_INFO "hellfire: 1 Inbound %s packet DROPPED \n", pol->pro);
+            printk(KERN_INFO "hellfire: 1 Inbound %s packet DROPPED\n", pol->pro);
             return NF_DROP;
         } else
             return NF_ACCEPT;
     }
+
     return NF_ACCEPT;
 }
 
@@ -64,10 +67,12 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
     } else if (iph->protocol == IPPROTO_UDP) {
         udp = udp_hdr(skb);
         sport = ntohs(udp->source);
+
         pol = find_policy(0, OUTPUT, NULL, dev->name, "udp", 0, dip, sport, 0, 0);
     } else if (iph->protocol == IPPROTO_TCP) {
         tcp = tcp_hdr(skb);
         sport = ntohs(tcp->source);
+
         pol = find_policy(0, OUTPUT, NULL, dev->name, "tcp", 0, dip, sport, 0, 0);
     }
 

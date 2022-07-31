@@ -82,8 +82,8 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 }
             }
 
-            pol = find_policy(num, d, NULL, NULL, NULL, 0, 0, 0, 0, 0);
-            if (pol) {
+
+            if ((pol = find_policy(num, d, NULL, NULL, NULL, 0, 0, 0, 0, 0)) != NULL) {
                 if (d == INPUT)
                     snprintf(device_buffer, 100, "%d.%d.%s.%s.%u.%d.%d", pol->id, pol->dest, pol->interface.in,
                              pol->pro, pol->ipaddr.src, pol->port.dest, pol->target);
