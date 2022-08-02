@@ -65,9 +65,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
         case HF_IOC_POL_LIST:
             printk(KERN_INFO "%s ioctl: HF_IOC_POL_LIST\n", DEV_NAME);
 
-            n = copy_from_user(device_buffer, (char*) arg, 100);
-
-            if (n != 0) {
+            if ((n = copy_from_user(device_buffer, (char*) arg, 100)) != 0) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
@@ -91,8 +89,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                     snprintf(device_buffer, 100, "%d.%d.%s.%s.%u.%d.%d", pol->id, pol->dest, pol->interface.out,
                              pol->pro, pol->ipaddr.dest, pol->port.src, pol->target);
 
-                n = copy_to_user((char*) arg, device_buffer, strlen(device_buffer));
-                if (n != 0) {
+                if ((n = copy_to_user((char*) arg, device_buffer, strlen(device_buffer))) != 0) {
                     printk(KERN_ALERT "%s: couldn't copy bytes from the kernel space %zu\n", DEV_NAME, n);
                 }
             }
@@ -100,9 +97,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
         case HF_IOC_POL_DEL:
             printk(KERN_INFO "%s ioctl: HF_IOC_POL_DEL\n", DEV_NAME);
 
-            n = copy_from_user(device_buffer, (char*) arg, 100);
-
-            if (n != 0) {
+            if((n = copy_from_user(device_buffer, (char*) arg, 100)) != 0) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
@@ -134,9 +129,7 @@ static ssize_t hf_write(struct file* filp, const char __user* buf, size_t len, l
         maxdatalen = len;
     }
 
-    n = copy_from_user(device_buffer, buf, maxdatalen);
-
-    if (n != 0) {
+    if((n = copy_from_user(device_buffer, buf, maxdatalen)) != 0) {
         printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
     }
 
@@ -175,8 +168,7 @@ static int __init hellfire_init(void) {
     printk(KERN_INFO "%s: IP Egress hook registered successfully\n", DEV_NAME);
 
     /* we will get the major number dynamically */
-    ret = alloc_chrdev_region(&dev_num, 0, 1, DEV_NAME);
-    if (ret < 0) {
+    if ((ret = alloc_chrdev_region(&dev_num, 0, 1, DEV_NAME)) < 0) {
         printk(KERN_ALERT "%s: failed to allocate major number\n", DEV_NAME);
         return ret;
     } else
@@ -190,8 +182,7 @@ static int __init hellfire_init(void) {
     mcdev->owner = THIS_MODULE;
 
     /* we have created and initialized our cdev structure now we need to add it to the kernel */
-    ret = cdev_add(mcdev, dev_num, 1);
-    if (ret < 0) {
+    if ((ret = cdev_add(mcdev, dev_num, 1)) < 0) {
         printk(KERN_ALERT "%s: device adding to the kernel failed\n", DEV_NAME);
         return ret;
     } else
