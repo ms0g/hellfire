@@ -25,13 +25,14 @@ MODULE_VERSION("0.1");
 #define DEV_NAME "hellfire"
 #define BUFFER_SIZE 100
 
-int ret;
-int major_number;
-dev_t dev_num;
-struct cdev* mcdev;
+
+static int major_number;
+static dev_t dev_num;
+static struct cdev* mcdev;
 static struct nf_hook_ops* ipingressho = NULL;
 static struct nf_hook_ops* ipegressho = NULL;
 static char device_buffer[BUFFER_SIZE];
+int ret;
 
 static int hf_open(struct inode* inode, struct file* filp);
 

@@ -7,7 +7,8 @@
 LIST_HEAD(policy_table);
 
 DEFINE_SPINLOCK(slock);
-unsigned long flags;
+
+static unsigned long flags;
 
 static policy_t* check_if_input(policy_t* entry, char* in, char* pro, u32 sip, u16 dport);
 
