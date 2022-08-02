@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
 
     if (argc < 3) {
         if (argc == 2 && (!std::strcmp(argv[1], "-h") || !std::strcmp(argv[1], "--help"))) {
-            std::cout << usage << std::endl;
+            std::cout << "hellfire version " << VERSION << "\n" << usage << std::endl;
         } else if (argc == 2 && (!std::strcmp(argv[1], "-v") || !std::strcmp(argv[1], "--version"))) {
             std::cout << "hellfire version " << VERSION << std::endl;
         } else if (argc == 2 && !std::strcmp(argv[1], "start")) {
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
         } else if (argc == 2 && !std::strcmp(argv[1], "stop")) {
             system("sh hellfire_unload");
         } else {
-            std::cout << usage << std::endl;
+            std::cout << "hellfire version " << VERSION << "\n" << usage << std::endl;
             return EXIT_FAILURE;
         }
         return EXIT_SUCCESS;
