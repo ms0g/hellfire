@@ -136,8 +136,7 @@ void create_policy(char* pol) {
     u32 ip;
     u16 port;
 
-    p = (policy_t*) kmalloc(sizeof(policy_t), GFP_KERNEL);
-    if (!p) {
+    if ((p = (policy_t*) kmalloc(sizeof(policy_t), GFP_KERNEL)) == NULL) {
         printk(KERN_ALERT "hellfire: kmalloc failed\n");
         return;
     }
