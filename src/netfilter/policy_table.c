@@ -9,6 +9,10 @@ LIST_HEAD(policy_table);
 DEFINE_SPINLOCK(slock);
 unsigned long flags;
 
+static policy_t* check_if_input(policy_t* entry, char* in, char* pro, u32 sip, u16 dport);
+
+static policy_t* check_if_output(policy_t* entry, char* out, char* pro, u32 dip, u16 sport);
+
 policy_t* find_policy(int id, enum packet_dest_t dest, char* in, char* out, char* pro,
                       u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
