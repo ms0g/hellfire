@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 project(hellfire)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
 
 set(KERNEL_MODULE "${PROJECT_NAME}.ko")
 set(DRIVER_PATH "src/driver/")

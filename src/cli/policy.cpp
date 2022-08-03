@@ -1,64 +1,36 @@
 #include "policy.h"
 #include <iostream>
+#include <cstring>
 #include "utils.h"
 
 Policy::Policy(std::string_view p) {
-    size_t start = 0, end;
     std::string_view token;
-    int token_order = 0;
+    char* svp = const_cast<char*>(p.data());
 
-    while ((end = p.find_first_of('.', start)) != std::string_view::npos) {
-        token = p.substr(start, end - start);
+    while (svp != nullptr && !(token = strsep(&svp, ".")).empty()) {
         if (token == "(null)") {
-            goto go_on;
+            continue;
+        } else if (token.starts_with("id")) {
+            id = std::stoi(&token[2]);
+        } else if (token.starts_with("dp")) {
+            port.dest = std::stoi(&token[2]);
+        } else if (token.starts_with("sp")) {
+            port.src = std::stoi(&token[2]);
+        } else if (token.starts_with("si")) {
+            ipaddr.src = std::stoul(&token[2]);
+        } else if (token.starts_with("di")) {
+            ipaddr.dest = std::stoul(&token[2]);
+        } else if (token.starts_with('d')) {
+            dest = static_cast<dest_t>(std::stoi(&token[1]));
+        } else if (token.starts_with('i')) {
+            interface.in = std::string{&token[1]};
+        } else if (token.starts_with('o')) {
+            interface.out = std::string{&token[1]};
+        } else if (token.starts_with('p')) {
+            pro = std::string{&token[1]};
+        } else if (token.starts_with('t')) {
+            target = static_cast<target_t>(std::stoi(&token[1]));
         }
-        switch (token_order) {
-            case 0:
-                id = std::stoi(token.data());
-                break;
-            case 1:
-                dest = static_cast<dest_t>(std::stoi(token.data()));
-                break;
-            case 2:
-                switch (dest) {
-                    case dest_t::INPUT:
-                        interface.in = std::string{token};
-                        break;
-                    case dest_t::OUTPUT:
-                        interface.out = std::string{token};
-                        break;
-                }
-                break;
-            case 3:
-                pro = std::string{token};
-                break;
-            case 4:
-                switch (dest) {
-                    case dest_t::INPUT:
-                        ipaddr.src = std::stoul(token.data());
-                        break;
-                    case dest_t::OUTPUT:
-                        ipaddr.dest = std::stoul(token.data());
-                        break;
-                }
-                break;
-            case 5:
-                switch (dest) {
-                    case dest_t::INPUT:
-                        port.dest = std::stoi(token.data());
-                        break;
-                    case dest_t::OUTPUT:
-                        port.src = std::stoi(token.data());
-                        break;
-                }
-                break;
-            case 6:
-                target = static_cast<target_t>(std::stoi(token.data()));
-                break;
-        }
-go_on:
-        start = end + 1;
-        ++token_order;
     }
 }
 
@@ -70,13 +42,13 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             os << " DEST:INPUT";
             os << " IFN:" << pol.interface.in;
             os << " SRC:" << inet_pf(pol.ipaddr.src);
-            os << " DPORT:" << pol.port.dest;
+            os << " DPT:" << pol.port.dest;
             break;
         case Policy::dest_t::OUTPUT:
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
-            os << " SPORT:" << pol.port.src;
+            os << " SPT:" << pol.port.src;
             break;
     }
 
