@@ -26,7 +26,7 @@ IOCDevice::~IOCDevice() {
 void IOCDevice::sendTo(std::string_view pol) const {
     std::cout << "Policy: " << pol << std::endl;
     if ((write(fd, pol.data(), pol.size())) == -1) {
-        std::cerr << DEV_NAME << " : Cannot write the device " << std::endl;
+        std::cerr << DEV_NAME << " ioctl: Cannot write the device " << std::endl;
     }
 }
 
@@ -35,8 +35,13 @@ void IOCDevice::read(std::string_view query) {
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_LIST), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_LIST Error" << std::endl;
     }
-    Policy pol{buf};
-    std::cout << pol << std::endl;
+    try {
+        Policy pol{buf};
+        std::cout << pol << std::endl;    
+    } catch (const std::exception& e) {
+        std::cerr << DEV_NAME << " ioctl: Error " << e.what() << std::endl;
+    }
+    
 }
 
 void IOCDevice::flush() const {

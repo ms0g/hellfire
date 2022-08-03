@@ -5,13 +5,14 @@
 Policy::Policy(std::string_view p) {
     size_t start = 0, end;
     std::string_view token;
-    int order = 0;
+    int token_order = 0;
+
     while ((end = p.find_first_of('.', start)) != std::string_view::npos) {
         token = p.substr(start, end - start);
         if (token == "(null)") {
             goto go_on;
         }
-        switch (order) {
+        switch (token_order) {
             case 0:
                 id = std::stoi(token.data());
                 break;
@@ -55,9 +56,9 @@ Policy::Policy(std::string_view p) {
                 target = static_cast<target_t>(std::stoi(token.data()));
                 break;
         }
-        go_on:
+go_on:
         start = end + 1;
-        ++order;
+        ++token_order;
     }
 }
 
@@ -69,13 +70,13 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             os << " DEST:INPUT";
             os << " IFN:" << pol.interface.in;
             os << " SRC:" << inet_pf(pol.ipaddr.src);
-            os << "  DPORT:" << pol.port.dest;
+            os << " DPORT:" << pol.port.dest;
             break;
         case Policy::dest_t::OUTPUT:
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
-            os << "  SPORT:" << pol.port.src;
+            os << " SPORT:" << pol.port.src;
             break;
     }
 
