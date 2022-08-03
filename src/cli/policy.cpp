@@ -7,7 +7,8 @@ Policy::Policy(std::string_view p) {
     std::string_view token;
     char* svp = const_cast<char*>(p.data());
 
-    while (svp != nullptr && !(token = strsep(&svp, ".")).empty()) {
+    while (svp != nullptr) {
+        token = strsep(&svp, ".");
         if (token == "(null)") {
             continue;
         } else if (token.starts_with("id")) {
