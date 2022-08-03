@@ -4,7 +4,7 @@
 #include <linux/ip.h>
 #include <linux/inetdevice.h>
 #include "policy_table.h"
-#include "protocols.h"
+#include "logger.h"
 
 unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_hook_state* state) {
     struct iphdr* iph;
@@ -13,7 +13,7 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
     struct net_device* dev;
     policy_t* pol;
     u32 sip;
-    u16 dport;
+    u16 sport=0, dport=0;
 
     if (unlikely(!skb))
         return NF_DROP;
@@ -28,12 +28,14 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
             break;
         case IPPROTO_UDP:
             udp = udp_hdr(skb);
+            sport = ntohs(udp->source);
             dport = ntohs(udp->dest);
 
             pol = find_policy(0, INPUT, dev->name, NULL, "udp", sip, 0, 0, dport, 0);
             break;
         case IPPROTO_TCP:
             tcp = tcp_hdr(skb);
+            sport = ntohs(tcp->source);
             dport = ntohs(tcp->dest);
 
             pol = find_policy(0, INPUT, dev->name, NULL, "tcp", sip, 0, 0, dport, 0);
@@ -42,7 +44,8 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
 
     if (pol) {
         if (pol->target == DROP) {
-            printk(KERN_INFO "hellfire: 1 Inbound %s packet DROPPED\n", prot_ntop(iph->protocol));
+            log_info(INPUT, dev->name, NULL, iph->protocol, ntohs(iph->tot_len),
+                     iph->tos, iph->ttl, iph->saddr, iph->daddr, sport, dport);
             return NF_DROP;
         } else
             return NF_ACCEPT;
@@ -58,7 +61,7 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
     struct net_device* dev;
     policy_t* pol;
     u32 dip;
-    u16 sport;
+    u16 sport=0,dport=0;
 
     if (unlikely(!skb))
         return NF_DROP;
@@ -74,12 +77,14 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
         case IPPROTO_UDP:
             udp = udp_hdr(skb);
             sport = ntohs(udp->source);
+            dport = ntohs(udp->dest);
 
             pol = find_policy(0, OUTPUT, NULL, dev->name, "udp", 0, dip, sport, 0, 0);
             break;
         case IPPROTO_TCP:
             tcp = tcp_hdr(skb);
             sport = ntohs(tcp->source);
+            dport = ntohs(tcp->dest);
 
             pol = find_policy(0, OUTPUT, NULL, dev->name, "tcp", 0, dip, sport, 0, 0);
             break;
@@ -87,7 +92,8 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
 
     if (pol) {
         if (pol->target == DROP) {
-            printk(KERN_INFO "hellfire: 1 Outbound %s packet DROPPED \n", prot_ntop(iph->protocol));
+            log_info(OUTPUT, NULL, dev->name, iph->protocol, ntohs(iph->tot_len),
+                     iph->tos, iph->ttl, iph->saddr, iph->daddr, sport, dport);
             return NF_DROP;
         } else
             return NF_ACCEPT;

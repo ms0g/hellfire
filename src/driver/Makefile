@@ -5,7 +5,7 @@ KDIR := /lib/modules/${KERNELRELEASE}/build
 MDIR := /lib/modules/${KERNELRELEASE}
 ccflags-y := -std=gnu99
 obj-m := ${MODULE}.o
-${MODULE}-objs := ../netfilter/hooks.o ../netfilter/protocols.o ../netfilter/policy_table.o hellfire_core.o
+${MODULE}-objs := ../netfilter/hooks.o ../netfilter/protocols.o ../netfilter/logger.o ../netfilter/policy_table.o hellfire_core.o
 
 all:
 	make -C ${KDIR} M=${PWD} modules
