@@ -13,3 +13,9 @@ uint32_t inet_bf(const char* addr) {
 
     return ntohl(sa.sin_addr.s_addr);
 }
+
+std::string inet_pf(uint32_t addr) {
+    struct sockaddr_in sa{};
+    sa.sin_addr.s_addr = ntohl(addr);
+    return inet_ntoa(sa.sin_addr);
+}

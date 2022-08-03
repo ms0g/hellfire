@@ -4,6 +4,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>    /* For O_RDWR */
 #include <unistd.h>   /* For open(), creat() */
+#include "policy.h"
 
 #define DEV_NAME "/dev/hellfire"
 
@@ -34,7 +35,8 @@ void IOCDevice::read(std::string_view query) {
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_LIST), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_LIST Error" << std::endl;
     }
-    std::cout << buf << std::endl;
+    Policy pol{buf};
+    std::cout << pol << std::endl;
 }
 
 void IOCDevice::flush() const {
