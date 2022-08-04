@@ -20,7 +20,7 @@ policy_t* find_policy(int id, enum packet_dest_t dest, char* in, char* out, char
 
     spin_lock_irqsave(&slock, flags);
     list_for_each_entry(entry, &policy_table, list) {
-        if (entry->id == id) {
+        if (entry->id == id && entry->dest == dest) {
             spin_unlock_irqrestore(&slock, flags);
             return entry;
         } else if (dest == INPUT && entry->dest == INPUT) {
