@@ -9,7 +9,8 @@ struct {
 } static const prot_kv[] = {
         {IPPROTO_ICMP, "icmp"},
         {IPPROTO_UDP,  "udp"},
-        {IPPROTO_TCP,  "tcp"}
+        {IPPROTO_TCP,  "tcp"},
+        {IPPROTO_SCTP, "sctp"}
 };
 
 #define PROTO_COUNT (int)(sizeof(prot_kv)/sizeof(prot_kv[0]))
