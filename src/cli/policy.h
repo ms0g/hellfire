@@ -20,11 +20,10 @@ public:
 
     int id{};                           /* Policy ID                */
     dest_t dest;                        /* Packet destination type  */
-    struct interface_t {
+    struct {
         std::string in;                 /* Ingress interface        */
         std::string out;                /* Egress interface         */
-    };
-    interface_t interface;
+    } interface;
     std::string pro;                    /* Protocol                 */
     union {
         uint32_t src;                   /* Source IP address        */

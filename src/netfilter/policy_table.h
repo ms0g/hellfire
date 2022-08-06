@@ -2,7 +2,6 @@
 #define HELLFIRE_POLICY_TABLE_H
 
 #include <linux/list.h>
-#include "macros.h"
 
 enum packet_dest_t {
     INPUT,
@@ -46,7 +45,6 @@ void delete_policy(int id, enum packet_dest_t dest, char* in, char* out, char* p
 
 void clean_policy_table(void);
 
-EXPORT_TYPE_AS(policy_t, query_t)
 #define query_parse(q, s) policy_parse(q, s)
 
 #endif //HELLFIRE_POLICY_TABLE_H

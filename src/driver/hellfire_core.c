@@ -9,7 +9,6 @@
 #include <linux/ioctl.h>
 #include "../netfilter/policy_table.h"
 #include "../netfilter/hooks.h"
-#include "../netfilter/macros.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("M. Sami GURPINAR <sami.gurpinar@gmail.com>");
@@ -23,6 +22,8 @@ MODULE_VERSION("0.1");
 
 #define DEV_NAME "hellfire"
 #define BUFFER_SIZE 100
+
+typedef policy_t query_t;
 
 static int major_number;
 static dev_t dev_num;
