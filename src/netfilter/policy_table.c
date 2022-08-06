@@ -48,13 +48,13 @@ policy_t* check_if_input(policy_t* entry, char* in, char* pro, u32 sip, u16 dpor
             if (entry->pro && pro) {
                 if (!strcmp(entry->pro, pro)) {
                     if (strcmp(pro, "icmp") != 0) {
-                        if (entry->port.dest)
+                        if (entry->port.dest && dport)
                             if (entry->port.dest != dport)
                                 check = 0;
                     }
                 } else check = 0;
             }
-            if (check && entry->ipaddr.src) {
+            if (check && entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
                     check = 0;
             }
@@ -63,16 +63,17 @@ policy_t* check_if_input(policy_t* entry, char* in, char* pro, u32 sip, u16 dpor
         if (!strcmp(entry->pro, pro)) {
             check = 1;
             if (strcmp(pro, "icmp") != 0) {
-                if (entry->port.dest)
+                if (entry->port.dest && dport)
                     if (entry->port.dest != dport)
                         check = 0;
             }
-            if (check && entry->ipaddr.src) {
+
+            if (check && entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
                     check = 0;
             }
         }
-    } else if (entry->ipaddr.src) {
+    } else if (entry->ipaddr.src && sip) {
         if (entry->ipaddr.src == sip)
             check = 1;
     }
@@ -94,13 +95,13 @@ policy_t* check_if_output(policy_t* entry, char* out, char* pro, u32 dip, u16 sp
             if (entry->pro && pro) {
                 if (!strcmp(entry->pro, pro)) {
                     if (strcmp(pro, "icmp") != 0) {
-                        if (entry->port.src)
+                        if (entry->port.src && sport)
                             if (entry->port.src != sport)
                                 check = 0;
                     }
                 } else check = 0;
             }
-            if (check && entry->ipaddr.dest) {
+            if (check && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
                     check = 0;
             }
@@ -109,16 +110,16 @@ policy_t* check_if_output(policy_t* entry, char* out, char* pro, u32 dip, u16 sp
         if (!strcmp(entry->pro, pro)) {
             check = 1;
             if (strcmp(pro, "icmp") != 0) {
-                if (entry->port.src)
+                if (entry->port.src && sport)
                     if (entry->port.src != sport)
                         check = 0;
             }
-            if (check && entry->ipaddr.dest) {
+            if (check && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
                     check = 0;
             }
         }
-    } else if (entry->ipaddr.dest) {
+    } else if (entry->ipaddr.dest && dip) {
         if (entry->ipaddr.dest == dip)
             check = 1;
     }
@@ -133,9 +134,6 @@ policy_t* check_if_output(policy_t* entry, char* out, char* pro, u32 dip, u16 sp
 void create_policy(char* pol) {
     static unsigned id = 1;
     policy_t* p;
-    char* chunk;
-    u32 ip;
-    u16 port;
 
     if ((p = (policy_t*) kmalloc(sizeof(policy_t), GFP_KERNEL)) == NULL) {
         printk(KERN_ALERT "hellfire: kmalloc failed\n");
@@ -145,11 +143,32 @@ void create_policy(char* pol) {
     memset(p, 0, sizeof(policy_t));
 
     p->id = id;
+
+    policy_parse(p, pol);
+
+    INIT_LIST_HEAD(&p->list);
+
+    spin_lock_irqsave(&slock, flags);
+    list_add_tail(&p->list, &policy_table);
+    spin_unlock_irqrestore(&slock, flags);
+    ++id;
+}
+
+void policy_parse(policy_t* p, char* pol) {
+    char* chunk;
+    u32 ip;
+    u16 port;
+    int num;
+
     while ((chunk = strsep(&pol, ".")) != NULL) {
         if (!strcmp(chunk, "INPUT")) {
             p->dest = INPUT;
         } else if (!strcmp(chunk, "OUTPUT")) {
             p->dest = OUTPUT;
+        } else if (chunk[0] == 'n') {
+            if (kstrtouint(&chunk[1], 10, &num) == 0) {
+                p->id = num;
+            }
         } else if (chunk[0] == 'i') {
             p->interface.in = kmalloc(strlen(&chunk[1]), GFP_KERNEL);
             strcpy(p->interface.in, &chunk[1]);
@@ -178,36 +197,28 @@ void create_policy(char* pol) {
                 p->target = DROP;
         }
     }
-    INIT_LIST_HEAD(&p->list);
-
-    spin_lock_irqsave(&slock, flags);
-    list_add_tail(&p->list, &policy_table);
-    spin_unlock_irqrestore(&slock, flags);
-    ++id;
 }
 
-void delete_policy(int id, enum packet_dest_t dest) {
-    struct list_head* curr, *next;
+
+void delete_policy(int id, enum packet_dest_t dest, char* in, char* out, char* pro,
+                   u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
 
-    spin_lock_irqsave(&slock, flags);
-    list_for_each_safe(curr, next, &policy_table) {
-        entry = list_entry(curr, policy_t, list);
-        if (entry->id == id) {
-            list_del(&entry->list);
-            if (dest == INPUT) {
-                if (entry->interface.in)
-                    kfree(entry->interface.in);
-            } else {
-                if (entry->interface.out)
-                    kfree(entry->interface.out);
-            }
-
-            if (entry->pro)
-                kfree(entry->pro);
-            kfree(entry);
-            spin_unlock_irqrestore(&slock, flags);
+    if ((entry = find_policy(id, dest, in, out, pro, sip, dip, sport, dport, target)) != NULL) {
+        spin_lock_irqsave(&slock, flags);
+        list_del(&entry->list);
+        if (dest == INPUT) {
+            if (entry->interface.in)
+                kfree(entry->interface.in);
+        } else {
+            if (entry->interface.out)
+                kfree(entry->interface.out);
         }
+
+        if (entry->pro)
+            kfree(entry->pro);
+        kfree(entry);
+        spin_unlock_irqrestore(&slock, flags);
     }
 }
 

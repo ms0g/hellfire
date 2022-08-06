@@ -9,7 +9,7 @@
 #include <linux/ioctl.h>
 #include "../netfilter/policy_table.h"
 #include "../netfilter/hooks.h"
-
+#include "../netfilter/macros.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("M. Sami GURPINAR <sami.gurpinar@gmail.com>");
@@ -17,14 +17,12 @@ MODULE_DESCRIPTION("Hellfire Char Device Driver");
 MODULE_VERSION("0.1");
 
 #define HF_IOC_MAGIC 0x73
-
 #define HF_IOC_POL_FLUSH _IO(HF_IOC_MAGIC, 1)
 #define HF_IOC_POL_LIST  _IOWR(HF_IOC_MAGIC, 2, char*)
 #define HF_IOC_POL_DEL   _IOWR(HF_IOC_MAGIC, 3, char*)
 
 #define DEV_NAME "hellfire"
 #define BUFFER_SIZE 100
-
 
 static int major_number;
 static dev_t dev_num;
@@ -55,12 +53,12 @@ static int hf_release(struct inode* inode, struct file* filp) {
 
 static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
     size_t n;
-    int num;
     char* pbuf;
-    enum packet_dest_t d;
-    char* chunk = NULL;
+    query_t q;
     policy_t* pol = NULL;
     pbuf = device_buffer;
+
+    memset(&q, 0, sizeof(query_t));
 
     switch (cmd) {
         case HF_IOC_POL_LIST:
@@ -70,19 +68,11 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            while ((chunk = strsep(&pbuf, ".")) != NULL) {
-                if (!strcmp(chunk, "INPUT")) {
-                    d = INPUT;
-                } else if (chunk[0] == 'n') {
-                    if ((ret = kstrtouint(&chunk[1], 10, &num)) != 0) {
-                        printk(KERN_INFO "%s ioctl: wrong val %d for policy id\n", DEV_NAME, ret);
-                        return ret;
-                    }
-                }
-            }
+            query_parse(&q, pbuf);
 
-            if ((pol = find_policy(num, d, NULL, NULL, NULL, 0, 0, 0, 0, 0)) != NULL) {
-                if (d == INPUT)
+            if ((pol = find_policy(q.id, q.dest, q.interface.in, q.interface.out, q.pro, q.ipaddr.src,
+                                   q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
+                if (pol->dest == INPUT)
                     snprintf(device_buffer, 100, "id%d.d%d.i%s.p%s.si%u.dp%d.t%d", pol->id, pol->dest, pol->interface.in,
                              pol->pro, pol->ipaddr.src, pol->port.dest, pol->target);
                 else
@@ -101,19 +91,11 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            while ((chunk = strsep(&pbuf, ".")) != NULL) {
-                if (!strcmp(chunk, "INPUT")) {
-                    d = INPUT;
-                } else if (chunk[0] == 'n') {
-                    if ((ret = kstrtouint(&chunk[1], 10, &num)) != 0) {
-                        printk(KERN_INFO "%s ioctl: wrong val %d for policy id\n", DEV_NAME, ret);
-                        return ret;
-                    }
-                }
-            }
+            query_parse(&q, pbuf);
 
-            delete_policy(num, d);
-            printk(KERN_INFO "%s: deleted the policy %d\n", DEV_NAME, num);
+            delete_policy(q.id, q.dest, q.interface.in, q.interface.out, q.pro, q.ipaddr.src,
+                          q.ipaddr.dest, q.port.src, q.port.dest, q.target);
+            printk(KERN_INFO "%s: deleted the policy %d\n", DEV_NAME, q.id);
             break;
         case HF_IOC_POL_FLUSH:
             clean_policy_table();

@@ -43,7 +43,8 @@ ADD rules
 ```
 LIST rules
 ```bash
-➜ sudo ./hellfire -L INPUT -n 1
+➜ sudo ./hellfire -L INPUT -p icmp
+ID:1 DEST:INPUT IFN:(null) SRC:192.168.56.17 DPT:0 PRO:icmp TGT:DROP
 ```
 DELETE rules
 ```bash
@@ -52,7 +53,7 @@ DELETE rules
 FLUSH policy table
 ```bash
 ➜ sudo ./hellfire -F all
-➜ Flushed the policy table
+Flushed the policy table
 ```
 Help
 ```bash
