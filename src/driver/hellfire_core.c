@@ -72,7 +72,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
 
             query_parse(&q, pbuf);
 
-            if ((pol = find_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.mac.dest, q.pro,
+            if ((pol = find_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro,
                                    q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
                 if (pol->dest == INPUT) {
                     snprintf(macstr, sizeof(macstr), "%pM", pol->mac.src);
@@ -80,7 +80,6 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                     snprintf(device_buffer, 100, "id%d.d%d.i%s.p%s.sm%s.si%u.dp%d.t%d", pol->id, pol->dest,
                              pol->interface.in, pol->pro, macstr, pol->ipaddr.src, pol->port.dest, pol->target);
                 } else {
-                    snprintf(macstr, sizeof(macstr), "%pM", pol->mac.dest);
 
                     snprintf(device_buffer, 100, "id%d.d%d.o%s.p%s.dm%s.di%u.sp%d.t%d", pol->id, pol->dest,
                              pol->interface.out, pol->pro, macstr, pol->ipaddr.dest, pol->port.src, pol->target);
@@ -100,7 +99,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
 
             query_parse(&q, pbuf);
 
-            delete_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.mac.dest, q.pro, q.ipaddr.src,
+            delete_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
                           q.ipaddr.dest, q.port.src, q.port.dest, q.target);
             printk(KERN_INFO "%s: deleted the policy %d\n", DEV_NAME, q.id);
             break;
