@@ -7,13 +7,17 @@ static char buf[200];
 
 void log_info(enum packet_dest_t dest, const char* in, const char* out, const u8* smac, const u8* dmac,
         u8 pro, size_t len, u8 tos, u8 ttl, u32 sip, u32 dip, u16 sport, u16 dport) {
-    char srcip[16], dstip[16];
-    char srcmac[18], dstmac[18];
+    char srcip[16] = {0}, dstip[16] = {0};
+    char srcmac[18] = {0}, dstmac[18] ={0};
 
     snprintf(srcip, sizeof(srcip), "%pI4", &sip);
     snprintf(dstip, sizeof(dstip), "%pI4", &dip);
-    snprintf(srcmac, sizeof(srcmac), "%pM", smac);
-    snprintf(dstmac, sizeof(dstmac), "%pM", dmac);
+
+    if (smac)
+        snprintf(srcmac, sizeof(srcmac), "%pM", smac);
+
+    if (dmac)
+        snprintf(dstmac, sizeof(dstmac), "%pM", dmac);
 
     switch (dest) {
         case INPUT:

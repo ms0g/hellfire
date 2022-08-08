@@ -100,7 +100,7 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
 
     if (pol) {
         if (pol->target == DROP) {
-            log_info(OUTPUT, NULL, dev->name, "", "", iph->protocol, ntohs(iph->tot_len),
+            log_info(OUTPUT, NULL, dev->name, NULL, NULL, iph->protocol, ntohs(iph->tot_len),
                      iph->tos, iph->ttl, iph->saddr, iph->daddr, sport, dport);
             return NF_DROP;
         } else
