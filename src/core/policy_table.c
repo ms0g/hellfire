@@ -46,29 +46,36 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
     if (entry->interface.in && in) {
         if (!strcmp(entry->interface.in, in)) {
             check = 1;
-            if (sha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
-                if (!memcmp(entry->mac.src, sha, 6)) {
-                    return entry;
+            if (entry->ipaddr.src && sip) {
+                if (entry->ipaddr.src != sip)
+                    check = 0;
+            } else if (sha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
+                if (memcmp(entry->mac.src, sha, 6) != 0) {
+                    check = 0;
                 }
-            } else {
-                if (entry->pro && pro) {
-                    if (!strcmp(entry->pro, pro)) {
-                        if (strcmp(pro, "icmp") != 0) {
-                            if (entry->port.dest && dport)
-                                if (entry->port.dest != dport)
-                                    check = 0;
-                        }
-                    } else check = 0;
-                }
-                if (check && entry->ipaddr.src && sip) {
-                    if (entry->ipaddr.src != sip)
-                        check = 0;
-                }
+            }
+            if (entry->pro && pro) {
+                if (!strcmp(entry->pro, pro)) {
+                    if (strcmp(pro, "icmp") != 0) {
+                        if (entry->port.dest && dport)
+                            if (entry->port.dest != dport)
+                                check = 0;
+                    }
+                } else check = 0;
             }
         }
     } else if (sha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
         if (!memcmp(entry->mac.src, sha, 6)) {
-            return entry;
+            check = 1;
+            if (entry->pro && pro) {
+                if (!strcmp(entry->pro, pro)) {
+                    if (strcmp(pro, "icmp") != 0) {
+                        if (entry->port.dest && dport)
+                            if (entry->port.dest != dport)
+                                check = 0;
+                    }
+                } else check = 0;
+            }
         }
     } else if (entry->pro && pro) {
         if (!strcmp(entry->pro, pro)) {
@@ -99,7 +106,6 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
 
 policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport) {
     int check = 0;
-
     if (entry->interface.out && out) {
         if (!strcmp(entry->interface.out, out)) {
             check = 1;
