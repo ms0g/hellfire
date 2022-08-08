@@ -76,13 +76,11 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                                    q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
                 if (pol->dest == INPUT) {
                     snprintf(macstr, sizeof(macstr), "%pM", pol->mac.src);
-
                     snprintf(device_buffer, 100, "id%d.d%d.i%s.p%s.sm%s.si%u.dp%d.t%d", pol->id, pol->dest,
                              pol->interface.in, pol->pro, macstr, pol->ipaddr.src, pol->port.dest, pol->target);
                 } else {
-
                     snprintf(device_buffer, 100, "id%d.d%d.o%s.p%s.di%u.sp%d.t%d", pol->id, pol->dest,
-                             pol->interface.out, pol->pro, macstr, pol->ipaddr.dest, pol->port.src, pol->target);
+                             pol->interface.out, pol->pro, pol->ipaddr.dest, pol->port.src, pol->target);
                 }
 
                 if ((n = copy_to_user((char*) arg, device_buffer, strlen(device_buffer))) != 0) {
