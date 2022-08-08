@@ -27,7 +27,6 @@ public:
     std::string pro;                    /* Protocol                 */
     struct {
         std::string src;                /* Source MAC Address       */
-        std::string dest;               /* Destination MAC Address  */
     } mac;
     union {
         uint32_t src;                   /* Source IP address        */

@@ -23,8 +23,6 @@ Policy::Policy(std::string_view p) {
             ipaddr.dest = std::stoul(&token[2]);
         } else if (token.starts_with("sm")) {
             mac.src = std::string{&token[2]};
-        } else if (token.starts_with("dm")) {
-            mac.dest = std::string{&token[2]};
         } else if (token.starts_with('d')) {
             dest = static_cast<dest_t>(std::stoi(&token[1]));
         } else if (token.starts_with('i')) {
@@ -53,7 +51,6 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
         case Policy::dest_t::OUTPUT:
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
-            os << " MAC:" << pol.mac.dest;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
             os << " SPT:" << pol.port.src;
             break;
