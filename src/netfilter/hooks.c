@@ -81,7 +81,7 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
     dip = ntohl(iph->daddr);
     switch (iph->protocol) {
         case IPPROTO_ICMP:
-            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, NULL, "icmp", 0, dip, 0, 0, 0);
+            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, tha, "icmp", 0, dip, 0, 0, 0);
             break;
         case IPPROTO_UDP:
             udp = udp_hdr(skb);

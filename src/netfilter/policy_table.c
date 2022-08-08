@@ -102,8 +102,8 @@ policy_t* check_if_output(policy_t* entry, const char* out, const u8* tha, const
     if (entry->interface.out && out) {
         if (!strcmp(entry->interface.out, out)) {
             check = 1;
-            if (tha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
-                if (!memcmp(entry->mac.src, tha, 6)) {
+            if (tha && memcmp(entry->mac.dest, "\0\0\0\0\0", 6) != 0) {
+                if (!memcmp(entry->mac.dest, tha, 6)) {
                     return entry;
                 }
             } else {
@@ -122,8 +122,8 @@ policy_t* check_if_output(policy_t* entry, const char* out, const u8* tha, const
                 }
             }
         }
-    } else if (tha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
-        if (!memcmp(entry->mac.src, tha, 6)) {
+    } else if (tha && memcmp(entry->mac.dest, "\0\0\0\0\0", 6) != 0) {
+        if (!memcmp(entry->mac.dest, tha, 6)) {
             return entry;
         }
     } else if (entry->pro && pro) {
@@ -230,7 +230,7 @@ void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* 
         const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
 
-    if ((entry = find_policy(id, dest, in, out, pro, sha, tha, sip, dip, sport, dport, target)) != NULL) {
+    if ((entry = find_policy(id, dest, in, out, sha, tha, pro, sip, dip, sport, dport, target)) != NULL) {
         spin_lock_irqsave(&slock, flags);
         list_del(&entry->list);
         if (dest == INPUT) {
