@@ -25,6 +25,10 @@ public:
         std::string out;                /* Egress interface         */
     } interface;
     std::string pro;                    /* Protocol                 */
+    struct {
+        std::string src;                /* Source MAC Address       */
+        std::string dest;               /* Destination MAC Address  */
+    } mac;
     union {
         uint32_t src;                   /* Source IP address        */
         uint32_t dest;                  /* Destination IP address   */

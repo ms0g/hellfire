@@ -69,6 +69,8 @@ Usage:  curser [ -<flag> [<val>] | --<name> [<val>] ]...
    -n, --num                   Policy id(only with -L and -D option)
    -i, --in-interface          Name of an interface via which a packet was received (only for packets entering the INPUT)
    -o, --out-interface         Name of an interface via which a packet is going to be sent (only for packets entering OUTPUT)
+       --src-mac               Source mac address(only for packets entering the INPUT)
+       --dst-mac               Destination mac address(only for packets entering the OUTPUT)
    -p, --protocol              The protocol of the rule or of the packet to check
    -s, --src-ip                Source ip address(only for packets entering the INPUT)
        --src-port              Source port address(only with -p option[TCP/UDP])

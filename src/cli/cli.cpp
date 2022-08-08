@@ -30,6 +30,8 @@ int main(int argc, char** argv) {
                                "-n, --num                   Policy id(only with -L and -D option)\n   "
                                "-i, --in-interface          Name of an interface via which a packet was received (only for packets entering the INPUT)\n   "
                                "-o, --out-interface         Name of an interface via which a packet is going to be sent (only for packets entering OUTPUT)\n   "
+                               "    --src-mac               Source mac address(only for packets entering the INPUT)\n   "
+                               "    --dst-mac               Destination mac address(only for packets entering the OUTPUT)\n   "
                                "-p, --protocol              The protocol of the rule or of the packet to check\n   "
                                "-s, --src-ip                Source ip address(only for packets entering the INPUT)\n   "
                                "    --src-port              Source port address(only with -p option[TCP/UDP])\n   "
@@ -77,6 +79,10 @@ int main(int argc, char** argv) {
             ss << "i" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-o") || !std::strcmp(argv[i], "--out-interface")) {
             ss << "o" << argv[++i] << ".";
+        } else if (!std::strcmp(argv[i], "--src-mac")) {
+            ss << "sm" << argv[++i] << ".";
+        } else if (!std::strcmp(argv[i], "--dst-mac")) {
+            ss << "dm" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-p") || !std::strcmp(argv[i], "--protocol")) {
             ss << "p" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-s") || !std::strcmp(argv[i], "--src-ip")) {

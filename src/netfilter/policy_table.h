@@ -22,6 +22,10 @@ typedef struct {
     } interface;
     char* pro;                          /* Protocol                 */
     union {
+        u8 src[6];                      /* Source MAC address        */
+        u8 dest[6];                     /* Destination MAC address   */
+    } mac;
+    union {
         u32 src;                        /* Source IP address        */
         u32 dest;                       /* Destination IP address   */
     } ipaddr;
@@ -33,15 +37,15 @@ typedef struct {
     struct list_head list;
 } policy_t;
 
-policy_t* find_policy(int id, enum packet_dest_t dest, char* in, char* out, char* pro,
-                      u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
+policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const char* out,  const u8* sha, const u8* tha,
+        const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
 
 void create_policy(char* pol);
 
 void policy_parse(policy_t* p, char* pol);
 
-void delete_policy(int id, enum packet_dest_t dest, char* in, char* out, char* pro,
-                   u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
+void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* out,  const u8* sha, const u8* tha,
+        const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
 
 void clean_policy_table(void);
 
