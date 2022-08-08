@@ -7,8 +7,8 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/ioctl.h>
-#include "../netfilter/policy_table.h"
-#include "../netfilter/hooks.h"
+#include "policy_table.h"
+#include "hooks.h"
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("M. Sami GURPINAR <sami.gurpinar@gmail.com>");
