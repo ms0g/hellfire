@@ -1,5 +1,5 @@
 # hellfire
-Hellfire is a toy linux firewall based on [Netfilter](https://www.netfilter.org "The netfilter.org project") which filters TCP/UDP/ICMP packets according to user-specified rules.
+Hellfire is a toy linux firewall based on [Netfilter](https://www.netfilter.org "The netfilter.org project") which filters TCP/SCTP/UDP/ICMP packets according to user-specified rules.
 
 Hellfire is composed of an user-space program `hellfire` that is a cli tool and a kernel-space module
 `hellfire_core`. Communications between user space and kernel space are done by means of
@@ -7,9 +7,9 @@ the device file `/dev/hellfire` using `ioctl` and `write` syscall.Using `hellfir
 that include some of the following fields:
 + Direction: inbound, outbound
 + Interface: inbound, outbound
-+ Source: ip address, port number
++ Source: ip address, mac address, port number
 + Destination: ip address, port number
-+ Protocol: tcp, udp, icmp
++ Protocol: tcp, udp, sctp, icmp
 
 Each created rule is sent to `hellfire_core` module.The module inserts a new entry
 into the policy table to compare every packets with user-specified rules. 
@@ -39,6 +39,7 @@ ADD rules
 ```bash
 ➜ sudo ./hellfire -A INPUT -i enp0s8 -s 192.168.56.17 -p icmp -t DROP
 ➜ sudo ./hellfire -A INPUT -s 192.168.56.17 -p tcp --dst-port 80 -t DROP
+➜ sudo ./hellfire -A INPUT --src-mac 08:00:27:27:ee:33 -t DROP
 ➜ sudo ./hellfire -A OUTPUT -d 192.168.56.17 -p icmp -t DROP
 ```
 LIST rules
