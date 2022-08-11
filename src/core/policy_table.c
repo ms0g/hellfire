@@ -8,8 +8,6 @@ LIST_HEAD(policy_table);
 
 DEFINE_SPINLOCK(slock);
 
-static unsigned long flags;
-
 static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport);
 
 static policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport);
@@ -17,6 +15,7 @@ static policy_t* check_if_output(policy_t* entry, const char* out, const char* p
 policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const char* out, const u8* sha,
                       const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
+    unsigned long flags;
 
     spin_lock_irqsave(&slock, flags);
     list_for_each_entry(entry, &policy_table, list)
@@ -150,6 +149,7 @@ policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32
 
 void create_policy(char* pol) {
     static unsigned id = 1;
+    unsigned long flags;
     policy_t* p;
 
     if ((p = (policy_t*) kmalloc(sizeof(policy_t), GFP_KERNEL)) == NULL) {
@@ -223,6 +223,7 @@ void policy_parse(policy_t* p, char* pol) {
 void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* out, const u8* sha,
                    const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
     policy_t* entry;
+    unsigned long flags;
 
     if ((entry = find_policy(id, dest, in, out, sha, pro, sip, dip, sport, dport, target)) != NULL) {
         spin_lock_irqsave(&slock, flags);
@@ -244,6 +245,7 @@ void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* 
 
 void clean_policy_table(void) {
     struct list_head* curr, * next;
+    unsigned long flags;
     policy_t* entry;
 
     spin_lock_irqsave(&slock, flags);
