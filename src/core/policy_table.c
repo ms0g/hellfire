@@ -3,10 +3,25 @@
 #include <linux/spinlock.h>
 #include <linux/slab.h>
 
+#define IS_EQUAL(s1, s2) !strcmp(s1, s2)
+#define IS_MAC_ADDR_EMPTY(m) (memcmp(m, "\0\0\0\0\0", 6) == 0)
+#define CHECK_PORT(e, prot, pn)                 \
+        if (!IS_EQUAL(prot, "icmp")) {          \
+            if ((e)->port.dest && (pn))         \
+                if ((e)->port.dest != (pn))     \
+                    check = 0;                  \
+    }
 
-LIST_HEAD(policy_table);
+#define CHECK_PRO(e, prot, pn)                  \
+    if ((e)->pro && (prot)) {                   \
+        if (IS_EQUAL((e)->pro, prot)) {         \
+            CHECK_PORT(e, prot, pn)             \
+        } else check = 0;                       \
+    }
 
-DEFINE_SPINLOCK(slock);
+static LIST_HEAD(policy_table);
+
+static DEFINE_SPINLOCK(slock);
 
 static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport);
 
@@ -37,23 +52,6 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
     spin_unlock_irqrestore(&slock, flags);
     return NULL;
 }
-
-#define IS_EQUAL(s1, s2) !strcmp(s1, s2)
-#define IS_MAC_ADDR_EMPTY(m) (memcmp(m, "\0\0\0\0\0", 6) == 0)
-
-#define CHECK_PORT(e, prot, pn)                 \
-        if (!IS_EQUAL(prot, "icmp")) {          \
-            if ((e)->port.dest && (pn))         \
-                if ((e)->port.dest != (pn))     \
-                    check = 0;                  \
-    }
-
-#define CHECK_PRO(e, prot, pn)                  \
-    if ((e)->pro && (prot)) {                   \
-        if (IS_EQUAL((e)->pro, prot)) {         \
-            CHECK_PORT(e, prot, pn)             \
-        } else check = 0;                       \
-    }
 
 policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport) {
     int check = 0;
