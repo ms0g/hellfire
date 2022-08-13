@@ -46,7 +46,7 @@ void IOCDevice::flush() const {
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_FLUSH)) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_FLUSH Error" << std::endl;
     }
-    std::cout << "Flushed the policy table" << std::endl;
+    std::cout << DEV_NAME << " ioctl: Flushed the policy table" << std::endl;
 }
 
 void IOCDevice::del(std::string_view query) {

@@ -8,18 +8,18 @@ class Policy {
 public:
     explicit Policy(std::string_view p);
 
-    enum class dest_t {
+    enum class DestType {
         INPUT,
         OUTPUT
     };
 
-    enum class target_t {
+    enum class TargetType {
         ACCEPT,
         DROP
     };
 
-    int id{};                           /* Policy ID                */
-    dest_t dest;                        /* Packet destination type  */
+    unsigned int id{};                  /* Policy ID                */
+    DestType dest;                      /* Packet destination type  */
     struct {
         std::string in;                 /* Ingress interface        */
         std::string out;                /* Egress interface         */
@@ -36,7 +36,7 @@ public:
         uint16_t src;                   /* Source port              */
         uint16_t dest;                  /* Destination port         */
     } port{};
-    target_t target{};                  /* Rule                     */
+    TargetType target{};                /* Rule                     */
 
     friend std::ostream& operator<<(std::ostream& os, const Policy& ep);
 };

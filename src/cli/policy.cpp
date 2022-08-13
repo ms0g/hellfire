@@ -24,7 +24,7 @@ Policy::Policy(std::string_view p) {
         } else if (token.starts_with("sm")) {
             mac.src = std::string{&token[2]};
         } else if (token.starts_with('d')) {
-            dest = static_cast<dest_t>(std::stoi(&token[1]));
+            dest = static_cast<DestType>(std::stoi(&token[1]));
         } else if (token.starts_with('i')) {
             interface.in = std::string{&token[1]};
         } else if (token.starts_with('o')) {
@@ -32,7 +32,7 @@ Policy::Policy(std::string_view p) {
         } else if (token.starts_with('p')) {
             pro = std::string{&token[1]};
         } else if (token.starts_with('t')) {
-            target = static_cast<target_t>(std::stoi(&token[1]));
+            target = static_cast<TargetType>(std::stoi(&token[1]));
         }
     }
 }
@@ -41,14 +41,14 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
     os << "ID:" << pol.id;
 
     switch (pol.dest) {
-        case Policy::dest_t::INPUT:
+        case Policy::DestType::INPUT:
             os << " DEST:INPUT";
             os << " IFN:" << pol.interface.in;
             os << " MAC:" << pol.mac.src;
             os << " SRC:" << inet_pf(pol.ipaddr.src);
             os << " DPT:" << pol.port.dest;
             break;
-        case Policy::dest_t::OUTPUT:
+        case Policy::DestType::OUTPUT:
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
@@ -57,7 +57,7 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
     }
 
     os << " PRO:" << pol.pro;
-    os << " TGT:" << (pol.target == Policy::target_t::DROP ? "DROP" : "ACCEPT");
+    os << " TGT:" << (pol.target == Policy::TargetType::DROP ? "DROP" : "ACCEPT");
 
     return os;
 }
