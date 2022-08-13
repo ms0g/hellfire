@@ -9,14 +9,14 @@
         if (!IS_EQUAL(prot, "icmp")) {          \
             if ((e)->port.dest && (pn))         \
                 if ((e)->port.dest != (pn))     \
-                    check = 0;                  \
+                    found = 0;                  \
     }
 
 #define CHECK_PRO(e, prot, pn)                  \
-    if ((e)->pro && (prot)) {                   \
+    if (found && (e)->pro && (prot)) {          \
         if (IS_EQUAL((e)->pro, prot)) {         \
             CHECK_PORT(e, prot, pn)             \
-        } else check = 0;                       \
+        } else found = 0;                       \
     }
 
 static LIST_HEAD(policy_table);
@@ -54,41 +54,41 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
 }
 
 policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport) {
-    int check = 0;
+    int found = 0;
     if (entry->interface.in && in) {
         if (IS_EQUAL(entry->interface.in, in)) {
-            check = 1;
+            found = 1;
             if (entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
-                    check = 0;
+                    found = 0;
             } else if (sha && !IS_MAC_ADDR_EMPTY(entry->mac.src)) {
                 if (memcmp(entry->mac.src, sha, 6) != 0) {
-                    check = 0;
+                    found = 0;
                 }
             }
             CHECK_PRO(entry, pro, dport)
         }
     } else if (sha && !IS_MAC_ADDR_EMPTY(entry->mac.src)) {
         if (!memcmp(entry->mac.src, sha, 6)) {
-            check = 1;
+            found = 1;
             CHECK_PRO(entry, pro, dport)
         }
     } else if (entry->pro && pro) {
         if (IS_EQUAL(entry->pro, pro)) {
-            check = 1;
+            found = 1;
             CHECK_PORT(entry, pro, dport)
 
-            if (check && entry->ipaddr.src && sip) {
+            if (found && entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
-                    check = 0;
+                    found = 0;
             }
         }
     } else if (entry->ipaddr.src && sip) {
         if (entry->ipaddr.src == sip)
-            check = 1;
+            found = 1;
     }
 
-    if (check)
+    if (found)
         return entry;
     else
         return NULL;
@@ -97,35 +97,35 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
 
 
 policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport) {
-    int check = 0;
+    int found = 0;
     if (entry->interface.out && out) {
         if (IS_EQUAL(entry->interface.out, out)) {
-            check = 1;
+            found = 1;
 
             CHECK_PRO(entry, pro, sport)
 
-            if (check && entry->ipaddr.dest && dip) {
+            if (found && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
-                    check = 0;
+                    found = 0;
             }
         }
     } else if (entry->pro && pro) {
         if (!strcmp(entry->pro, pro)) {
-            check = 1;
+            found = 1;
 
             CHECK_PORT(entry, pro, sport)
 
-            if (check && entry->ipaddr.dest && dip) {
+            if (found && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
-                    check = 0;
+                    found = 0;
             }
         }
     } else if (entry->ipaddr.dest && dip) {
         if (entry->ipaddr.dest == dip)
-            check = 1;
+            found = 1;
     }
 
-    if (check)
+    if (found)
         return entry;
     else
         return NULL;
