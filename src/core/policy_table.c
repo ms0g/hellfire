@@ -12,8 +12,8 @@ static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, 
 
 static policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport);
 
-policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const char* out, const u8* sha,
-                      const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
+policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
+                      const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target) {
     policy_t* entry;
     unsigned long flags;
 
@@ -43,14 +43,14 @@ policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const cha
 
 #define CHECK_PORT(e, prot, pn)                 \
         if (!IS_EQUAL(prot, "icmp")) {          \
-            if (e->port.dest && pn)             \
-                if (e->port.dest != pn)         \
+            if ((e)->port.dest && (pn))         \
+                if ((e)->port.dest != (pn))     \
                     check = 0;                  \
     }
 
 #define CHECK_PRO(e, prot, pn)                  \
-    if (e->pro && prot) {                       \
-        if (IS_EQUAL(e->pro, prot)) {           \
+    if ((e)->pro && (prot)) {                   \
+        if (IS_EQUAL((e)->pro, prot)) {         \
             CHECK_PORT(e, prot, pn)             \
         } else check = 0;                       \
     }
@@ -164,7 +164,7 @@ void policy_parse(policy_t* p, char* pol) {
     u16 port;
     int num;
 
-    while ((chunk = strsep(&pol, ".")) != NULL) {
+    while ((chunk = (char*) strsep(&pol, ".")) != NULL) {
         if (!strcmp(chunk, "INPUT")) {
             p->dest = INPUT;
         } else if (!strcmp(chunk, "OUTPUT")) {
@@ -212,8 +212,8 @@ void policy_parse(policy_t* p, char* pol) {
 }
 
 
-void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* out, const u8* sha,
-                   const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target) {
+void delete_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
+                   const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target) {
     policy_t* entry;
     unsigned long flags;
 

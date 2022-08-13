@@ -3,19 +3,19 @@
 
 #include <linux/list.h>
 
-enum packet_dest_t {
+enum PacketDestType {
     INPUT,
     OUTPUT
 };
 
-enum target_t {
+enum TargetType {
     ACCEPT,
     DROP
 };
 
 typedef struct {
-    int id;                             /* Policy ID                */
-    enum packet_dest_t dest;            /* Packet destination type  */
+    unsigned int id;                     /* Policy ID                */
+    enum PacketDestType dest;            /* Packet destination type  */
     union {
         char* in;                       /* Ingress interface        */
         char* out;                      /* Egress interface         */
@@ -32,19 +32,19 @@ typedef struct {
         u16 src;                        /* Source port              */
         u16 dest;                       /* Destination port         */
     } port;
-    enum target_t target;               /* Rule                     */
+    enum TargetType target;               /* Rule                     */
     struct list_head list;
 } policy_t;
 
-policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const char* out,  const u8* sha,
-        const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
+policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
+                      const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target);
 
 void create_policy(char* pol);
 
 void policy_parse(policy_t* p, char* pol);
 
-void delete_policy(int id, enum packet_dest_t dest, const char* in, const char* out,  const u8* sha,
-        const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum target_t target);
+void delete_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
+                   const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target);
 
 void clean_policy_table(void);
 
