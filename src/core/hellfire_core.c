@@ -68,7 +68,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            query_parse(&q, device_buffer);
+            parse_query(&q, device_buffer);
 
             if ((pol = find_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro,
                                    q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
@@ -106,7 +106,7 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            query_parse(&q, device_buffer);
+            parse_query(&q, device_buffer);
 
             delete_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
                           q.ipaddr.dest, q.port.src, q.port.dest, q.target);

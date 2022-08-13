@@ -41,13 +41,13 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
 
 void create_policy(char* pol);
 
-void policy_parse(policy_t* p, char* pol);
+void parse_policy(policy_t* p, char* pol);
 
 void delete_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
                    const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target);
 
 void clean_policy_table(void);
 
-#define query_parse(q, s) policy_parse(q, s)
+#define parse_query(q, s) parse_policy(q, s)
 
 #endif //HELLFIRE_POLICY_TABLE_H

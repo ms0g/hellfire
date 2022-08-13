@@ -148,7 +148,7 @@ void create_policy(char* pol) {
 
     p->id = id;
 
-    policy_parse(p, pol);
+    parse_policy(p, pol);
 
     INIT_LIST_HEAD(&p->list);
 
@@ -158,7 +158,7 @@ void create_policy(char* pol) {
     ++id;
 }
 
-void policy_parse(policy_t* p, char* pol) {
+void parse_policy(policy_t* p, char* pol) {
     char* chunk;
     u32 ip;
     u16 port;
