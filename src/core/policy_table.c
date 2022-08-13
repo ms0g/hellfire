@@ -18,8 +18,7 @@ policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const cha
     unsigned long flags;
 
     spin_lock_irqsave(&slock, flags);
-    list_for_each_entry(entry, &policy_table, list)
-    {
+    list_for_each_entry(entry, &policy_table, list) {
         if (entry->id == id && entry->dest == dest) {
             spin_unlock_irqrestore(&slock, flags);
             return entry;
@@ -39,51 +38,47 @@ policy_t* find_policy(int id, enum packet_dest_t dest, const char* in, const cha
     return NULL;
 }
 
+#define IS_EQUAL(s1, s2) !strcmp(s1, s2)
+#define IS_MAC_ADDR_EMPTY(m) (memcmp(m, "\0\0\0\0\0", 6) == 0)
+
+#define CHECK_PORT(e, prot, pn)                 \
+        if (!IS_EQUAL(prot, "icmp")) {          \
+            if (e->port.dest && pn)             \
+                if (e->port.dest != pn)         \
+                    check = 0;                  \
+    }
+
+#define CHECK_PRO(e, prot, pn)                  \
+    if (e->pro && prot) {                       \
+        if (IS_EQUAL(e->pro, prot)) {           \
+            CHECK_PORT(e, prot, pn)             \
+        } else check = 0;                       \
+    }
 
 policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport) {
     int check = 0;
     if (entry->interface.in && in) {
-        if (!strcmp(entry->interface.in, in)) {
+        if (IS_EQUAL(entry->interface.in, in)) {
             check = 1;
             if (entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
                     check = 0;
-            } else if (sha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
+            } else if (sha && !IS_MAC_ADDR_EMPTY(entry->mac.src)) {
                 if (memcmp(entry->mac.src, sha, 6) != 0) {
                     check = 0;
                 }
             }
-            if (entry->pro && pro) {
-                if (!strcmp(entry->pro, pro)) {
-                    if (strcmp(pro, "icmp") != 0) {
-                        if (entry->port.dest && dport)
-                            if (entry->port.dest != dport)
-                                check = 0;
-                    }
-                } else check = 0;
-            }
+            CHECK_PRO(entry, pro, dport)
         }
-    } else if (sha && memcmp(entry->mac.src, "\0\0\0\0\0", 6) != 0) {
+    } else if (sha && !IS_MAC_ADDR_EMPTY(entry->mac.src)) {
         if (!memcmp(entry->mac.src, sha, 6)) {
             check = 1;
-            if (entry->pro && pro) {
-                if (!strcmp(entry->pro, pro)) {
-                    if (strcmp(pro, "icmp") != 0) {
-                        if (entry->port.dest && dport)
-                            if (entry->port.dest != dport)
-                                check = 0;
-                    }
-                } else check = 0;
-            }
+            CHECK_PRO(entry, pro, dport)
         }
     } else if (entry->pro && pro) {
-        if (!strcmp(entry->pro, pro)) {
+        if (IS_EQUAL(entry->pro, pro)) {
             check = 1;
-            if (strcmp(pro, "icmp") != 0) {
-                if (entry->port.dest && dport)
-                    if (entry->port.dest != dport)
-                        check = 0;
-            }
+            CHECK_PORT(entry, pro, dport)
 
             if (check && entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
@@ -106,17 +101,11 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
 policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport) {
     int check = 0;
     if (entry->interface.out && out) {
-        if (!strcmp(entry->interface.out, out)) {
+        if (IS_EQUAL(entry->interface.out, out)) {
             check = 1;
-            if (entry->pro && pro) {
-                if (!strcmp(entry->pro, pro)) {
-                    if (strcmp(pro, "icmp") != 0) {
-                        if (entry->port.src && sport)
-                            if (entry->port.src != sport)
-                                check = 0;
-                    }
-                } else check = 0;
-            }
+
+            CHECK_PRO(entry, pro, sport)
+
             if (check && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
                     check = 0;
@@ -125,11 +114,9 @@ policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32
     } else if (entry->pro && pro) {
         if (!strcmp(entry->pro, pro)) {
             check = 1;
-            if (strcmp(pro, "icmp") != 0) {
-                if (entry->port.src && sport)
-                    if (entry->port.src != sport)
-                        check = 0;
-            }
+
+            CHECK_PORT(entry, pro, sport)
+
             if (check && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
                     check = 0;
@@ -196,8 +183,13 @@ void policy_parse(policy_t* p, char* pol) {
             p->pro = kmalloc(strlen(&chunk[1]), GFP_KERNEL);
             strcpy(p->pro, &chunk[1]);
         } else if (!strncmp(chunk, "sm", 2)) {
-            sscanf(&chunk[2], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx", &p->mac.src[0], &p->mac.src[1], &p->mac.src[2],
-                   &p->mac.src[3], &p->mac.src[4], &p->mac.src[5]);
+            sscanf(&chunk[2], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
+                   &p->mac.src[0],
+                   &p->mac.src[1],
+                   &p->mac.src[2],
+                   &p->mac.src[3],
+                   &p->mac.src[4],
+                   &p->mac.src[5]);
         } else if (!strncmp(chunk, "si", 2)) {
             if (kstrtouint(&chunk[2], 10, &ip) == 0)
                 p->ipaddr.src = ip;
