@@ -5,17 +5,21 @@
 
 #define IS_EQUAL(s1, s2) !strcmp(s1, s2)
 #define IS_MAC_ADDR_EMPTY(m) (memcmp(m, "\0\0\0\0\0", 6) == 0)
-#define CHECK_PORT(e, prot, pn)                 \
+#define CHECK_PORT(e, prot, sp, dp)             \
         if (!IS_EQUAL(prot, "icmp")) {          \
-            if ((e)->port.dest && (pn))         \
-                if ((e)->port.dest != (pn))     \
+            if ((e)->port.dest && (dp)) {       \
+                if ((e)->port.dest != (dp))     \
                     found = 0;                  \
-    }
+            } else if ((e)->port.src && (sp)) { \
+                if ((e)->port.src != (sp))      \
+                    found = 0;                  \
+            }                                   \
+        }
 
-#define CHECK_PRO(e, prot, pn)                  \
+#define CHECK_PRO(found, e, prot, sp, dp)              \
     if (found && (e)->pro && (prot)) {          \
         if (IS_EQUAL((e)->pro, prot)) {         \
-            CHECK_PORT(e, prot, pn)             \
+            CHECK_PORT(e, prot, sp, dp)         \
         } else found = 0;                       \
     }
 
@@ -23,9 +27,11 @@ static LIST_HEAD(policy_table);
 
 static DEFINE_SPINLOCK(slock);
 
-static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport);
+static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
+                                const char* pro, u32 sip, u16 sport, u16 dport);
 
-static policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport);
+static policy_t* check_if_output(policy_t* entry, const char* out,
+                                 const char* pro, u32 dip, u16 sport, u16 dport);
 
 policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
                       const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target) {
@@ -38,12 +44,12 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
             spin_unlock_irqrestore(&slock, flags);
             return entry;
         } else if (dest == INPUT && entry->dest == INPUT) {
-            if (check_if_input(entry, in, sha, pro, sip, dport)) {
+            if (check_if_input(entry, in, sha, pro, sip, sport, dport)) {
                 spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
         } else if (dest == OUTPUT && entry->dest == OUTPUT) {
-            if (check_if_output(entry, out, pro, dip, sport)) {
+            if (check_if_output(entry, out, pro, dip, sport, dport)) {
                 spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
@@ -53,7 +59,8 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
     return NULL;
 }
 
-policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const char* pro, u32 sip, u16 dport) {
+policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
+                         const char* pro, u32 sip, u16 sport, u16 dport) {
     int found = 0;
     if (entry->interface.in && in) {
         if (IS_EQUAL(entry->interface.in, in)) {
@@ -66,17 +73,18 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
                     found = 0;
                 }
             }
-            CHECK_PRO(entry, pro, dport)
+            CHECK_PRO(found, entry, pro, sport, dport)
         }
     } else if (sha && !IS_MAC_ADDR_EMPTY(entry->mac.src)) {
         if (!memcmp(entry->mac.src, sha, 6)) {
             found = 1;
-            CHECK_PRO(entry, pro, dport)
+            CHECK_PRO(found, entry, pro, sport, dport)
         }
     } else if (entry->pro && pro) {
         if (IS_EQUAL(entry->pro, pro)) {
             found = 1;
-            CHECK_PORT(entry, pro, dport)
+
+            CHECK_PORT(entry, pro, sport, dport)
 
             if (found && entry->ipaddr.src && sip) {
                 if (entry->ipaddr.src != sip)
@@ -96,13 +104,13 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha, const c
 }
 
 
-policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport) {
+policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport, u16 dport) {
     int found = 0;
     if (entry->interface.out && out) {
         if (IS_EQUAL(entry->interface.out, out)) {
             found = 1;
 
-            CHECK_PRO(entry, pro, sport)
+            CHECK_PRO(found, entry, pro, sport, dport)
 
             if (found && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)
@@ -110,10 +118,10 @@ policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32
             }
         }
     } else if (entry->pro && pro) {
-        if (!strcmp(entry->pro, pro)) {
+        if (IS_EQUAL(entry->pro, pro)) {
             found = 1;
 
-            CHECK_PORT(entry, pro, sport)
+            CHECK_PORT(entry, pro, sport, dport)
 
             if (found && entry->ipaddr.dest && dip) {
                 if (entry->ipaddr.dest != dip)

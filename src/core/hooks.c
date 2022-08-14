@@ -39,14 +39,14 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
             sport = ntohs(udp->source);
             dport = ntohs(udp->dest);
 
-            pol = find_policy(0, INPUT, dev->name, NULL, sha, "udp", sip, 0, 0, dport, 0);
+            pol = find_policy(0, INPUT, dev->name, NULL, sha, "udp", sip, 0, sport, dport, 0);
             break;
         case IPPROTO_TCP:
             tcp = tcp_hdr(skb);
             sport = ntohs(tcp->source);
             dport = ntohs(tcp->dest);
 
-            pol = find_policy(0, INPUT, dev->name, NULL, sha, "tcp", sip, 0, 0, dport, 0);
+            pol = find_policy(0, INPUT, dev->name, NULL, sha, "tcp", sip, 0, sport, dport, 0);
             break;
     }
 
@@ -87,14 +87,14 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
             sport = ntohs(udp->source);
             dport = ntohs(udp->dest);
 
-            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "udp", 0, dip, sport, 0, 0);
+            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "udp", 0, dip, sport, dport, 0);
             break;
         case IPPROTO_TCP:
             tcp = tcp_hdr(skb);
             sport = ntohs(tcp->source);
             dport = ntohs(tcp->dest);
 
-            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "tcp", 0, dip, sport, 0, 0);
+            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "tcp", 0, dip, sport, dport, 0);
             break;
     }
 
