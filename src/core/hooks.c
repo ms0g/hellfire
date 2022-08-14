@@ -1,6 +1,7 @@
 #include "hooks.h"
 #include <linux/udp.h>
 #include <linux/tcp.h>
+#include <linux/sctp.h>
 #include <linux/ip.h>
 #include <linux/inetdevice.h>
 #include <linux/etherdevice.h>
@@ -13,6 +14,7 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
     const struct iphdr* iph;
     const struct udphdr* udp;
     const struct tcphdr* tcp;
+    const struct sctphdr* sctp;
     const struct net_device* dev;
     const policy_t* pol;
     u32 sip;
@@ -48,6 +50,13 @@ unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_ho
 
             pol = find_policy(0, INPUT, dev->name, NULL, sha, "tcp", sip, 0, sport, dport, 0);
             break;
+        case IPPROTO_SCTP:
+            sctp = sctp_hdr(skb);
+            sport = ntohs(sctp->source);
+            dport = ntohs(sctp->dest);
+
+            pol = find_policy(0, INPUT, dev->name, NULL, sha, "sctp", sip, 0, sport, dport, 0);
+            break;
     }
 
     if (pol) {
@@ -66,6 +75,7 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
     const struct iphdr* iph;
     const struct udphdr* udp;
     const struct tcphdr* tcp;
+    const struct sctphdr* sctp;
     const struct net_device* dev;
     const policy_t* pol;
     u32 dip;
@@ -95,6 +105,13 @@ unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hoo
             dport = ntohs(tcp->dest);
 
             pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "tcp", 0, dip, sport, dport, 0);
+            break;
+        case IPPROTO_SCTP:
+            sctp = sctp_hdr(skb);
+            sport = ntohs(sctp->source);
+            dport = ntohs(sctp->dest);
+
+            pol = find_policy(0, OUTPUT, NULL, dev->name, NULL, "sctp", 0, dip, sport, dport, 0);
             break;
     }
 
