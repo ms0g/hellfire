@@ -28,7 +28,7 @@ typedef struct {
         u32 src;                        /* Source IP address        */
         u32 dest;                       /* Destination IP address   */
     } ipaddr;
-    union {
+    struct {
         u16 src;                        /* Source port              */
         u16 dest;                       /* Destination port         */
     } port;

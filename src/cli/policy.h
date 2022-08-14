@@ -32,7 +32,7 @@ public:
         uint32_t src;                   /* Source IP address        */
         uint32_t dest;                  /* Destination IP address   */
     } ipaddr{};
-    union {
+    struct {
         uint16_t src;                   /* Source port              */
         uint16_t dest;                  /* Destination port         */
     } port{};

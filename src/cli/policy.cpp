@@ -52,7 +52,7 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
-            os << " SPT:" << pol.port.src;
+            os <<  (pol.port.src ? " SPT:" : " DPT:") << (pol.port.src ? pol.port.src : pol.port.dest);
             break;
     }
 
