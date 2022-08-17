@@ -2,21 +2,9 @@ cmake_minimum_required(VERSION 3.20)
 project(hellfire)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++2a")
-
-set(KERNEL_MODULE "${PROJECT_NAME}.ko")
-set(CORE_PATH "src/core")
 set(SCRIPTS_PATH "scripts/")
 
-file(GLOB_RECURSE SOURCES "src/cli/*")
-
-execute_process(COMMAND make
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/${CORE_PATH}
-)
-
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_PATH}
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src/cli)
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${CORE_PATH}/${KERNEL_MODULE}
-        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_subdirectory(src)

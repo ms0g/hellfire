@@ -3,7 +3,7 @@ module="hellfire"
 device="hellfire"
 mode="777"
 
-insmod $module.ko || exit 1
+insmod ../core/$module.ko || exit 1
 # get Major number dynamically
 major=$(awk -vmodule="$module" '$0 ~ module {print $1;}' /proc/devices)
 mknod /dev/${device} c "$major" 0
