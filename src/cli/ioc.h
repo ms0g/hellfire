@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string_view>
+#include <vector>
 
 class IOCDevice {
 public:
@@ -8,7 +9,9 @@ public:
 
     ~IOCDevice();
 
-    void sendTo(std::string_view pol) const;
+    void write(std::string_view policy) const;
+
+    void bulkWrite(const std::vector<std::string>& policyList) const;
 
     void read(std::string_view query);
 

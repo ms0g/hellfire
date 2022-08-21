@@ -1,11 +1,12 @@
 #include <iostream>
 #include <cstring>
 #include <sstream>
+#include <vector>
 #include "utils.h"
 #include "ioc.h"
 
 #define VERSION_MAJOR 0
-#define VERSION_MINOR 1
+#define VERSION_MINOR 2
 #define VERSION_MICRO 0
 
 #define STRINGIFY0(s) # s
@@ -31,11 +32,13 @@ int main(int argc, char** argv) {
                                "-i, --in-interface          Name of an interface via which a packet was received (only for packets entering the INPUT)\n   "
                                "-o, --out-interface         Name of an interface via which a packet is going to be sent (only for packets entering OUTPUT)\n   "
                                "    --src-mac               Source mac address(only for packets entering the INPUT)\n   "
-                               "-p, --protocol              The protocol of the rule or of the packet to check\n   "
+                               "-p, --protocol              The protocol of the rule or of the packet to check[tcp/udp/sctp/icmp)\n   "
                                "-s, --src-ip                Source ip address(only for packets entering the INPUT)\n   "
-                               "    --src-port              Source port address(only with -p option[TCP/UDP])\n   "
+                               "    --src-ip-range          Source ip address range[ip:ip](only for packets entering the INPUT)\n   "
+                               "    --src-port              Source port address(only with -p option)\n   "
                                "-d  --dst-ip                Destination ip address(only for packets entering OUTPUT)\n   "
-                               "    --dst-port              Destination port address(only with -p option[TCP/UDP])\n   "
+                               "    --dst-ip-range          Destination ip address range[ip:ip](only for packets entering the OUTPUT)\n   "
+                               "    --dst-port              Destination port address(only with -p option)\n   "
                                "-t, --target                A firewall rule specifies criteria for a packet[ACCEPT/DROP]\n   "
                                "-h, --help                  Display usage information and exit\n   "
                                "-v, --version               Display version information and exit\n   ";
@@ -43,6 +46,7 @@ int main(int argc, char** argv) {
     command_t cmd;
     // Policy Format: DEST_IF_PRO_IP_PORT_TARGET
     std::stringstream ss;
+    std::vector<std::string> bulk_policies;
 
     if (argc < 3) {
         if (argc == 2 && (!std::strcmp(argv[1], "-h") || !std::strcmp(argv[1], "--help"))) {
@@ -75,30 +79,92 @@ int main(int argc, char** argv) {
         } else if (!std::strcmp(argv[i], "-n") || !std::strcmp(argv[i], "--num")) {
             ss << "n" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-i") || !std::strcmp(argv[i], "--in-interface")) {
-            ss << "i" << argv[++i] << ".";
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("i").append(arg).append(".");
+                }
+            } else
+                ss << "i" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-o") || !std::strcmp(argv[i], "--out-interface")) {
-            ss << "o" << argv[++i] << ".";
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("o").append(arg).append(".");
+                }
+            } else
+                ss << "o" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "--src-mac")) {
             ss << "sm" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-p") || !std::strcmp(argv[i], "--protocol")) {
-            ss << "p" << argv[++i] << ".";
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("p").append(arg).append(".");
+                }
+            } else
+                ss << "p" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-s") || !std::strcmp(argv[i], "--src-ip")) {
             ss << "si" << inet_bf(argv[++i]) << ".";
+        } else if (!std::strcmp(argv[i], "--src-ip-range")) {
+            auto s = std::string{argv[++i]};
+            auto pos = s.find(':');
+            auto first_ip = s.substr(0, pos);
+            auto last_ip = s.substr(pos + 1);
+            auto pol = ss.str();
+            auto temp = pol;
+            for (uint32_t ip = inet_bf(first_ip.c_str()); ip <= inet_bf(last_ip.c_str()); ++ip) {
+                temp.append("si").append(std::to_string(ip)).append(".");
+                bulk_policies.emplace_back(temp);
+                temp.clear();
+                temp = pol;
+            }
         } else if (!std::strcmp(argv[i], "-d") || !std::strcmp(argv[i], "--dst-ip")) {
             ss << "di" << inet_bf(argv[++i]) << ".";
+        } else if (!std::strcmp(argv[i], "--dst-ip-range")) {
+            auto s = std::string{argv[++i]};
+            auto pos = s.find(':');
+            auto first_ip = s.substr(0, pos);
+            auto last_ip = s.substr(pos + 1);
+            auto pol = ss.str();
+            auto temp = pol;
+            for (uint32_t ip = inet_bf(first_ip.c_str()); ip <= inet_bf(last_ip.c_str()); ++ip) {
+                temp.append("di").append(std::to_string(ip)).append(".");
+                bulk_policies.emplace_back(temp);
+                temp.clear();
+                temp = pol;
+            }
         } else if (!std::strcmp(argv[i], "--src-port")) {
-            ss << "sp" << argv[++i] << ".";
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("sp").append(arg).append(".");
+                }
+            } else
+                ss << "sp" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "--dst-port")) {
-            ss << "dp" << argv[++i] << ".";
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("dp").append(arg).append(".");
+                }
+            } else
+                ss << "dp" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-t") || !std::strcmp(argv[i], "--target")) {
-            ss << "t" << argv[++i];
+            if (!bulk_policies.empty()) {
+                auto arg = std::string_view{argv[++i]};
+                for (auto& p: bulk_policies) {
+                    p.append("t").append(arg);
+                }
+            } else
+                ss << "t" << argv[++i];
         }
     }
 
     IOCDevice iocdev{};
     switch (cmd) {
         case command_t::APPEND: {
-            iocdev.sendTo(ss.str());
+            bulk_policies.empty() ? iocdev.write(ss.str()) : iocdev.bulkWrite(bulk_policies);
             break;
         }
         case command_t::DELETE: {

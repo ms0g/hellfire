@@ -21,9 +21,9 @@ IOCDevice::~IOCDevice() {
     close(fd);
 }
 
-void IOCDevice::sendTo(std::string_view pol) const {
-    std::cout << "Policy: " << pol << std::endl;
-    if ((write(fd, pol.data(), pol.size())) == -1) {
+void IOCDevice::write(std::string_view policy) const {
+    std::cout << "Policy: " << policy << std::endl;
+    if ((::write(fd, policy.data(), policy.size())) == -1) {
         std::cerr << DEV_NAME << " ioctl: Cannot write the device " << std::endl;
     }
 }
@@ -35,11 +35,11 @@ void IOCDevice::read(std::string_view query) {
     }
     try {
         Policy pol{buf};
-        std::cout << pol << std::endl;    
+        std::cout << pol << std::endl;
     } catch (const std::exception& e) {
         std::cerr << DEV_NAME << " ioctl: Error " << e.what() << std::endl;
     }
-    
+
 }
 
 void IOCDevice::flush() const {
@@ -53,6 +53,12 @@ void IOCDevice::del(std::string_view query) {
     std::strcpy(buf, query.data());
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_DEL), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_DEL Error" << std::endl;
+    }
+}
+
+void IOCDevice::bulkWrite(const std::vector<std::string>& policyList) const {
+    for (const auto& p: policyList) {
+        write(p);
     }
 }
 
