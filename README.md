@@ -40,6 +40,7 @@ ADD rules
 ➜ sudo ./hellfire -A INPUT -i enp0s8 -s 192.168.56.17 -p icmp -t DROP
 ➜ sudo ./hellfire -A INPUT -s 192.168.56.17 -p tcp --dst-port 80 -t DROP
 ➜ sudo ./hellfire -A INPUT --src-mac 08:00:27:27:ee:33 -t DROP
+➜ sudo ./hellfire -A INPUT --src-ip-range 192.168.56.17:192.168.56.18 -t DROP
 ➜ sudo ./hellfire -A OUTPUT -d 192.168.56.17 -p icmp -t DROP
 ```
 LIST rules
@@ -73,9 +74,11 @@ Usage:  curser [ -<flag> [<val>] | --<name> [<val>] ]...
        --src-mac               Source mac address(only for packets entering the INPUT)
    -p, --protocol              The protocol of the rule or of the packet to check
    -s, --src-ip                Source ip address(only for packets entering the INPUT)
-       --src-port              Source port address(only with -p option[TCP/UDP])
+       --src-ip-range          Source ip address range[ip:ip](only for packets entering the INPUT)
+       --src-port              Source port address(only with -p option)
    -d  --dst-ip                Destination ip address(only for packets entering OUTPUT)
-       --dst-port              Destination port address(only with -p option[TCP/UDP])
+       --dst-ip-range          Destination ip address range[ip:ip](only for packets entering the OUTPUT)
+       --dst-port              Destination port address(only with -p option)
    -t, --target                A firewall rule specifies criteria for a packet[ACCEPT/DROP]
    -h, --help                  Display usage information and exit
    -v, --version               Display version information and exit
