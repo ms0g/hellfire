@@ -14,8 +14,8 @@ enum TargetType {
 };
 
 typedef struct {
-    unsigned int id;                     /* Policy ID                */
-    enum PacketDestType dest;            /* Packet destination type  */
+    unsigned int id;                    /* Policy ID                */
+    enum PacketDestType dest;           /* Packet destination type  */
     union {
         char* in;                       /* Ingress interface        */
         char* out;                      /* Egress interface         */
@@ -32,7 +32,7 @@ typedef struct {
         u16 src;                        /* Source port              */
         u16 dest;                       /* Destination port         */
     } port;
-    enum TargetType target;               /* Rule                     */
+    enum TargetType target;             /* Rule                     */
     struct list_head list;
 } policy_t;
 
