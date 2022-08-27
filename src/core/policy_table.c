@@ -196,6 +196,7 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
         if (check_pro(entry, pro, found, sport, dport) != 0)
             found = 0;
     } else if (check_pro(entry, pro, found, sport, dport) == 0) {
+        found = 1;
         if (check_ip(entry, sip) != 0) {
             found = 0;
         }
@@ -221,6 +222,7 @@ policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32
         if (check_pro(entry, pro, found, sport, dport) != 0)
             found = 0;
     } else if (check_pro(entry, pro, found, sport, dport) == 0) {
+        found = 1;
         if (check_ip(entry, dip) != 0) {
             found = 0;
         }
@@ -248,10 +250,12 @@ int check_ip(policy_t* entry, u32 ip) {
                 if (entry->ipaddr.src == ip) return SUCCESS;
 
             }
+            break;
         case OUTPUT:
             if (entry->ipaddr.dest && ip) {
                 if (entry->ipaddr.dest == ip) return SUCCESS;
             }
+            break;
     }
     return -ERRNOTFOUND;
 }
@@ -279,12 +283,14 @@ int check_port(policy_t* entry, u16 sport, u16 dport) {
             if (entry->port.dest && dport) {
                 if (entry->port.dest == dport) return SUCCESS;
             }
+            break;
         case OUTPUT:
             if (entry->port.dest && dport) {
                 if (entry->port.dest == dport) return SUCCESS;
             } else if (entry->port.src && sport) {
                 if (entry->port.src == sport) return SUCCESS;
             }
+            break;
     }
     return -ERRNOTFOUND;
 }
