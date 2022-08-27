@@ -25,6 +25,7 @@ void IOCDevice::write(std::string_view policy) const {
     std::cout << "Policy: " << policy << std::endl;
     if ((::write(fd, policy.data(), policy.size())) == -1) {
         std::cerr << DEV_NAME << " ioctl: Cannot write the device " << std::endl;
+        return;
     }
 }
 
@@ -32,6 +33,7 @@ void IOCDevice::read(std::string_view query) {
     std::strcpy(buf, query.data());
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_LIST), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_LIST Error" << std::endl;
+        return;
     }
     try {
         Policy pol{buf};
@@ -45,6 +47,7 @@ void IOCDevice::read(std::string_view query) {
 void IOCDevice::flush() const {
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_FLUSH)) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_FLUSH Error" << std::endl;
+        return;
     }
     std::cout << DEV_NAME << " ioctl: Flushed the policy table" << std::endl;
 }
@@ -53,6 +56,7 @@ void IOCDevice::del(std::string_view query) {
     std::strcpy(buf, query.data());
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_DEL), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_DEL Error" << std::endl;
+        return;
     }
 }
 
