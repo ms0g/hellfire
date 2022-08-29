@@ -269,12 +269,15 @@ int hfCheckMac(HfPolicy* entry, const u8* mac) {
 
 int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport) {
     if (state && entry->pro && pro) {
-        if (IS_EQUAL(entry->pro, pro)) {
-            if (!IS_EQUAL(entry->pro, "icmp"))
-                return hfCheckPort(entry, sport, dport);
-        }
+        if (!IS_EQUAL(entry->pro, pro))
+            return -HF_NOTFOUND;
+
+        if (!IS_EQUAL(entry->pro, "icmp"))
+            return hfCheckPort(entry, sport, dport);
+        else
+            return HF_SUCCESS;
     }
-    return HF_SUCCESS;
+    return -HF_NOTFOUND;
 }
 
 int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
