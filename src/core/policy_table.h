@@ -48,6 +48,6 @@ void hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const ch
 
 void hfCleanPolicyTable(void);
 
-#define HFParseQuery(q, s) hfParsePolicy(q, s)
+#define HfParseQuery(q, s) hfParsePolicy(q, s)
 
 #endif //HELLFIRE_POLICY_TABLE_H
