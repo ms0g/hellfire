@@ -3,6 +3,8 @@
 #include <string_view>
 #include <vector>
 
+namespace Hf {
+
 class IOCDevice {
 public:
     IOCDevice();
@@ -24,3 +26,5 @@ private:
     char buf[100]{};
 
 };
+
+}

@@ -3,6 +3,7 @@
 #include <string>
 #include <string_view>
 
+namespace Hf {
 
 class Policy {
 public:
@@ -40,3 +41,4 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Policy& ep);
 };
+}
