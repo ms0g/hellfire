@@ -2,13 +2,13 @@
 #include <iostream>
 #include <cstring>
 #include <sys/ioctl.h>
-#include <fcntl.h>    /* For O_RDWR */
-#include <unistd.h>   /* For open(), creat() */
+#include <fcntl.h>
+#include <unistd.h>
 #include "policy.h"
 
 #define DEV_NAME "/dev/hellfire"
 
-#define HF_IOC_MAGIC 0x73 // 'S'
+#define HF_IOC_MAGIC 0x73 //'S'
 #define HF_IOC_POL_FLUSH _IO(HF_IOC_MAGIC, 1)
 #define HF_IOC_POL_LIST  _IOWR(HF_IOC_MAGIC, 2, char*)
 #define HF_IOC_POL_DEL   _IOWR(HF_IOC_MAGIC, 3, char*)
@@ -32,11 +32,17 @@ void IOCDevice::write(std::string_view policy) const {
 }
 
 void IOCDevice::read(std::string_view query) {
+    char temp[100];
     std::strcpy(buf, query.data());
+    std::strcpy(temp, buf);
     if (ioctl(fd, static_cast<unsigned long>(HF_IOC_POL_LIST), buf) == -1) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_LIST Error" << std::endl;
         return;
     }
+
+    if (strcmp(temp, buf) == 0)
+        return;
+
     try {
         Policy pol{buf};
         std::cout << pol << std::endl;
