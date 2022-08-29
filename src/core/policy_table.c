@@ -3,44 +3,44 @@
 #include <linux/slab.h>
 #include "macros.h"
 
-#define SUCCESS 0
-#define ERRNOTFOUND 1
+#define HF_SUCCESS 0
+#define HF_NOTFOUND 1
 
 static LIST_HEAD(policy_table);
 
 static DEFINE_SPINLOCK(slock);
 
-static policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
-                                const char* pro, u32 sip, u16 sport, u16 dport);
+static HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
+                                    const char* pro, u32 sip, u16 sport, u16 dport);
 
-static policy_t* check_if_output(policy_t* entry, const char* out,
-                                 const char* pro, u32 dip, u16 sport, u16 dport);
+static HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out,
+                                    const char* pro, u32 dip, u16 sport, u16 dport);
 
-static inline int check_inf(policy_t* entry, const char* in);
+static inline int hfCheckInf(HfPolicy* entry, const char* in);
 
-static inline int check_ip(policy_t* entry, u32 ip);
+static inline int hfCheckIp(HfPolicy* entry, u32 ip);
 
-static inline int check_mac(policy_t* entry, const u8* mac);
+static inline int hfCheckMac(HfPolicy* entry, const u8* mac);
 
-static inline int check_pro(policy_t* entry, const char* pro, int state, u16 sport, u16 dport);
+static inline int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport);
 
-static inline int check_port(policy_t* entry, u16 sport, u16 dport);
+static inline int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport);
 
-void create_policy(char* pol) {
+void hfCreatePolicy(char* pol) {
     static unsigned id = 1;
     unsigned long flags;
-    policy_t* p;
+    HfPolicy* p;
 
-    if ((p = (policy_t*) kmalloc(sizeof(policy_t), GFP_KERNEL)) == NULL) {
+    if ((p = (HfPolicy*) kmalloc(sizeof(HfPolicy), GFP_KERNEL)) == NULL) {
         printk(KERN_ALERT "hellfire: kmalloc failed\n");
         return;
     }
 
-    memset(p, 0, sizeof(policy_t));
+    memset(p, 0, sizeof(HfPolicy));
 
     p->id = id;
 
-    parse_policy(p, pol);
+    hfParsePolicy(p, pol);
 
     INIT_LIST_HEAD(&p->list);
 
@@ -50,7 +50,7 @@ void create_policy(char* pol) {
     ++id;
 }
 
-void parse_policy(policy_t* p, char* pol) {
+void hfParsePolicy(HfPolicy* p, char* pol) {
     char* chunk;
     u32 ip;
     u16 port;
@@ -104,12 +104,12 @@ void parse_policy(policy_t* p, char* pol) {
 }
 
 
-void delete_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
-                   const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target) {
-    policy_t* entry;
+void hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
+                    const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
+    HfPolicy* entry;
     unsigned long flags;
 
-    if ((entry = find_policy(id, dest, in, out, sha, pro, sip, dip, sport, dport, target)) != NULL) {
+    if ((entry = hfFindPolicy(id, dest, in, out, sha, pro, sip, dip, sport, dport, target)) != NULL) {
         spin_lock_irqsave(&slock, flags);
         list_del(&entry->list);
         if (dest == INPUT) {
@@ -127,15 +127,15 @@ void delete_policy(int id, enum PacketDestType dest, const char* in, const char*
     }
 }
 
-void clean_policy_table(void) {
+void hfCleanPolicyTable(void) {
     struct list_head* curr, * next;
     unsigned long flags;
-    policy_t* entry;
+    HfPolicy* entry;
 
     spin_lock_irqsave(&slock, flags);
     list_for_each_safe(curr, next, &policy_table)
     {
-        entry = list_entry(curr, policy_t, list);
+        entry = list_entry(curr, HfPolicy, list);
         list_del(&entry->list);
         if (entry->dest == INPUT) {
             if (entry->interface.in)
@@ -152,9 +152,9 @@ void clean_policy_table(void) {
     spin_unlock_irqrestore(&slock, flags);
 }
 
-policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const char* out, const u8* sha,
-                      const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum TargetType target) {
-    policy_t* entry;
+HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
+                       const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
+    HfPolicy* entry;
     unsigned long flags;
 
     spin_lock_irqsave(&slock, flags);
@@ -164,12 +164,12 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
             spin_unlock_irqrestore(&slock, flags);
             return entry;
         } else if (dest == INPUT && entry->dest == INPUT) {
-            if (check_if_input(entry, in, sha, pro, sip, sport, dport)) {
+            if (hfCheckIncomingPkt(entry, in, sha, pro, sip, sport, dport)) {
                 spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
         } else if (dest == OUTPUT && entry->dest == OUTPUT) {
-            if (check_if_output(entry, out, pro, dip, sport, dport)) {
+            if (hfCheckOutgoingPkt(entry, out, pro, dip, sport, dport)) {
                 spin_unlock_irqrestore(&slock, flags);
                 return entry;
             }
@@ -179,28 +179,28 @@ policy_t* find_policy(int id, enum PacketDestType dest, const char* in, const ch
     return NULL;
 }
 
-policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
-                         const char* pro, u32 sip, u16 sport, u16 dport) {
+HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
+                             const char* pro, u32 sip, u16 sport, u16 dport) {
     int found = 0;
-    if (check_inf(entry, in) == 0) {
+    if (hfCheckInf(entry, in) == 0) {
         found = 1;
-        if (check_ip(entry, sip) != 0) {
+        if (hfCheckIp(entry, sip) != 0) {
             found = 0;
-        } else if (check_mac(entry, sha) != 0) {
+        } else if (hfCheckMac(entry, sha) != 0) {
             found = 0;
         }
-        if (check_pro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
             found = 0;
-    } else if (check_mac(entry, sha) == 0) {
+    } else if (hfCheckMac(entry, sha) == 0) {
         found = 1;
-        if (check_pro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
             found = 0;
-    } else if (check_pro(entry, pro, found, sport, dport) == 0) {
+    } else if (hfCheckPro(entry, pro, found, sport, dport) == 0) {
         found = 1;
-        if (check_ip(entry, sip) != 0) {
+        if (hfCheckIp(entry, sip) != 0) {
             found = 0;
         }
-    } else if (check_ip(entry, sip) == 0) {
+    } else if (hfCheckIp(entry, sip) == 0) {
         found = 1;
     }
 
@@ -212,21 +212,21 @@ policy_t* check_if_input(policy_t* entry, const char* in, const u8* sha,
 }
 
 
-policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32 dip, u16 sport, u16 dport) {
+HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, u32 dip, u16 sport, u16 dport) {
     int found = 0;
-    if (check_inf(entry, out) == 0) {
+    if (hfCheckInf(entry, out) == 0) {
         found = 1;
-        if (check_ip(entry, dip) != 0) {
+        if (hfCheckIp(entry, dip) != 0) {
             found = 0;
         }
-        if (check_pro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
             found = 0;
-    } else if (check_pro(entry, pro, found, sport, dport) == 0) {
+    } else if (hfCheckPro(entry, pro, found, sport, dport) == 0) {
         found = 1;
-        if (check_ip(entry, dip) != 0) {
+        if (hfCheckIp(entry, dip) != 0) {
             found = 0;
         }
-    } else if (check_ip(entry, dip) == 0) {
+    } else if (hfCheckIp(entry, dip) == 0) {
         found = 1;
     }
 
@@ -236,61 +236,61 @@ policy_t* check_if_output(policy_t* entry, const char* out, const char* pro, u32
         return NULL;
 }
 
-int check_inf(policy_t* entry, const char* in) {
+int hfCheckInf(HfPolicy* entry, const char* in) {
     if (entry->interface.in && in) {
-        if (IS_EQUAL(entry->interface.in, in)) return SUCCESS;
+        if (IS_EQUAL(entry->interface.in, in)) return HF_SUCCESS;
     }
-    return -ERRNOTFOUND;
+    return -HF_NOTFOUND;
 }
 
-int check_ip(policy_t* entry, u32 ip) {
+int hfCheckIp(HfPolicy* entry, u32 ip) {
     switch (entry->dest) {
         case INPUT:
             if (entry->ipaddr.src && ip) {
-                if (entry->ipaddr.src == ip) return SUCCESS;
+                if (entry->ipaddr.src == ip) return HF_SUCCESS;
 
             }
             break;
         case OUTPUT:
             if (entry->ipaddr.dest && ip) {
-                if (entry->ipaddr.dest == ip) return SUCCESS;
+                if (entry->ipaddr.dest == ip) return HF_SUCCESS;
             }
             break;
     }
-    return -ERRNOTFOUND;
+    return -HF_NOTFOUND;
 }
 
-int check_mac(policy_t* entry, const u8* mac) {
+int hfCheckMac(HfPolicy* entry, const u8* mac) {
     if (!IS_MAC_ADDR_EMPTY(entry->mac.src) && mac) {
-        if (memcmp(entry->mac.src, mac, 6) == 0) return SUCCESS;
+        if (memcmp(entry->mac.src, mac, 6) == 0) return HF_SUCCESS;
     }
-    return -ERRNOTFOUND;
+    return -HF_NOTFOUND;
 }
 
-int check_pro(policy_t* entry, const char* pro, int state, u16 sport, u16 dport) {
+int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport) {
     if (state && entry->pro && pro) {
         if (IS_EQUAL(entry->pro, pro)) {
             if (!IS_EQUAL(entry->pro, "icmp"))
-                return check_port(entry, sport, dport);
+                return hfCheckPort(entry, sport, dport);
         }
     }
-    return SUCCESS;
+    return HF_SUCCESS;
 }
 
-int check_port(policy_t* entry, u16 sport, u16 dport) {
+int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
     switch (entry->dest) {
         case INPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport) return SUCCESS;
+                if (entry->port.dest == dport) return HF_SUCCESS;
             }
             break;
         case OUTPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport) return SUCCESS;
+                if (entry->port.dest == dport) return HF_SUCCESS;
             } else if (entry->port.src && sport) {
-                if (entry->port.src == sport) return SUCCESS;
+                if (entry->port.src == sport) return HF_SUCCESS;
             }
             break;
     }
-    return -ERRNOTFOUND;
+    return -HF_NOTFOUND;
 }
