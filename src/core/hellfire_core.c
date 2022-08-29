@@ -23,7 +23,7 @@ MODULE_VERSION("0.1");
 #define DEV_NAME "hellfire"
 #define BUFFER_SIZE 100
 
-typedef policy_t query_t;
+typedef HfPolicy HfQuery;
 
 static int major_number;
 static dev_t dev_num;
@@ -33,32 +33,32 @@ static struct nf_hook_ops* ipegressho = NULL;
 static char device_buffer[BUFFER_SIZE];
 int ret;
 
-static int hf_open(struct inode* inode, struct file* filp);
+static int hfOpen(struct inode* inode, struct file* filp);
 
-static ssize_t hf_write(struct file* filp, const char __user* buf, size_t len, loff_t* offp);
+static ssize_t hfWrite(struct file* filp, const char __user* buf, size_t len, loff_t* offp);
 
-static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg);
+static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg);
 
-static int hf_release(struct inode* inode, struct file* filp);
+static int hfRelease(struct inode* inode, struct file* filp);
 
 
-static int hf_open(struct inode* inode, struct file* filp) {
+static int hfOpen(struct inode* inode, struct file* filp) {
     printk(KERN_INFO "%s: device opened successfully\n", DEV_NAME);
     return 0;
 }
 
-static int hf_release(struct inode* inode, struct file* filp) {
+static int hfRelease(struct inode* inode, struct file* filp) {
     printk(KERN_INFO "%s: device has been closed\n", DEV_NAME);
     return 0;
 }
 
-static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
+static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
     size_t n;
-    query_t q;
+    HfQuery q;
     char macstr[18];
-    policy_t* pol = NULL;
+    HfPolicy* pol = NULL;
 
-    memset(&q, 0, sizeof(query_t));
+    memset(&q, 0, sizeof(HfQuery));
 
     switch (cmd) {
         case HF_IOC_POL_LIST:
@@ -68,10 +68,10 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            parse_query(&q, device_buffer);
+            HFParseQuery(&q, device_buffer);
 
-            if ((pol = find_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro,
-                                   q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
+            if ((pol = hfFindPolicy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro,
+                                    q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
                 if (pol->dest == INPUT) {
                     snprintf(macstr, sizeof(macstr), "%pM", pol->mac.src);
                     snprintf(device_buffer, sizeof(device_buffer), "id%d.d%d.i%s.p%s.sm%s.si%u.sp%d.dp%d.t%d",
@@ -108,21 +108,21 @@ static long hf_ioctl(struct file* filp, unsigned int cmd, unsigned long arg) {
                 printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
             }
 
-            parse_query(&q, device_buffer);
+            HFParseQuery(&q, device_buffer);
 
-            delete_policy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
-                          q.ipaddr.dest, q.port.src, q.port.dest, q.target);
+            hfDeletePolicy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
+                           q.ipaddr.dest, q.port.src, q.port.dest, q.target);
             printk(KERN_INFO "%s: deleted the policy %d\n", DEV_NAME, q.id);
             break;
         case HF_IOC_POL_FLUSH:
-            clean_policy_table();
+            hfCleanPolicyTable();
             printk(KERN_INFO "%s: flushed policy table\n", DEV_NAME);
             break;
     }
     return 0;
 }
 
-static ssize_t hf_write(struct file* filp, const char __user* buf, size_t len, loff_t* offp) {
+static ssize_t hfWrite(struct file* filp, const char __user* buf, size_t len, loff_t* offp) {
     size_t maxdatalen = BUFFER_SIZE, n;
 
     if (len < BUFFER_SIZE) {
@@ -135,23 +135,23 @@ static ssize_t hf_write(struct file* filp, const char __user* buf, size_t len, l
 
     device_buffer[maxdatalen] = 0;
 
-    create_policy(device_buffer);
+    hfCreatePolicy(device_buffer);
 
     return len;
 }
 
 static const struct file_operations fops = {    /* these are the file operations provided by our driver */
         .owner = THIS_MODULE,                   /* prevents unloading when operations are in use */
-        .open = hf_open,                        /* to open the device */
-        .unlocked_ioctl = hf_ioctl,             /* for another operations */
-        .write = hf_write,                      /* to write to the device */
-        .release = hf_release,                  /* to close the device */
+        .open = hfOpen,                        /* to open the device */
+        .unlocked_ioctl = hfIoctl,             /* for another operations */
+        .write = hfWrite,                      /* to write to the device */
+        .release = hfRelease,                  /* to close the device */
 };
 
 static int __init hellfire_init(void) {
     /* Initialize IP Inbound netfilter hook */
     ipingressho = (struct nf_hook_ops*) kcalloc(1, sizeof(struct nf_hook_ops), GFP_KERNEL);
-    ipingressho->hook = (nf_hookfn*) ip_ingress_hook;   /* hook function */
+    ipingressho->hook = (nf_hookfn*) hfIpIngressHook;   /* hook function */
     ipingressho->hooknum = NF_INET_PRE_ROUTING;         /* incoming packets */
     ipingressho->pf = NFPROTO_IPV4;                     /* IP */
     ipingressho->priority = NF_IP_PRI_FIRST;
@@ -160,7 +160,7 @@ static int __init hellfire_init(void) {
 
     /* Initialize IP Outbound netfilter hook */
     ipegressho = (struct nf_hook_ops*) kcalloc(1, sizeof(struct nf_hook_ops), GFP_KERNEL);
-    ipegressho->hook = (nf_hookfn*) ip_egress_hook;     /* hook function */
+    ipegressho->hook = (nf_hookfn*) hfIpEgressHook;     /* hook function */
     ipegressho->hooknum = NF_INET_POST_ROUTING;         /* outgoing packets */
     ipegressho->pf = NFPROTO_IPV4;                      /* IP */
     ipegressho->priority = NF_IP_PRI_FIRST;
@@ -207,7 +207,7 @@ static void __exit hellfire_exit(void) {
     unregister_chrdev_region(dev_num, 1);
     printk(KERN_INFO "%s: unregistered the device numbers\n", DEV_NAME);
 
-    clean_policy_table();
+    hfCleanPolicyTable();
     printk(KERN_INFO "%s: freed up the policy table\n", DEV_NAME);
 
     printk(KERN_INFO "%s: driver is exiting\n", DEV_NAME);

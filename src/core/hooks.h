@@ -3,8 +3,8 @@
 
 #include <linux/netfilter_ipv4.h>
 
-unsigned int ip_ingress_hook(void* priv, struct sk_buff* skb, const struct nf_hook_state* state);
+unsigned int hfIpIngressHook(void* priv, struct sk_buff* skb, const struct nf_hook_state* state);
 
-unsigned int ip_egress_hook(void* priv, struct sk_buff* skb, const struct nf_hook_state* state);
+unsigned int hfIpEgressHook(void* priv, struct sk_buff* skb, const struct nf_hook_state* state);
 
 #endif //HELLFIRE_HOOKS_H
