@@ -238,7 +238,8 @@ HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, 
 
 int hfCheckInf(HfPolicy* entry, const char* in) {
     if (entry->interface.in && in) {
-        if (IS_EQUAL(entry->interface.in, in)) return HF_SUCCESS;
+        if (IS_EQUAL(entry->interface.in, in))
+            return HF_SUCCESS;
     }
     return -HF_NOTFOUND;
 }
@@ -247,13 +248,14 @@ int hfCheckIp(HfPolicy* entry, u32 ip) {
     switch (entry->dest) {
         case INPUT:
             if (entry->ipaddr.src && ip) {
-                if (entry->ipaddr.src == ip) return HF_SUCCESS;
-
+                if (entry->ipaddr.src == ip)
+                    return HF_SUCCESS;
             }
             break;
         case OUTPUT:
             if (entry->ipaddr.dest && ip) {
-                if (entry->ipaddr.dest == ip) return HF_SUCCESS;
+                if (entry->ipaddr.dest == ip)
+                    return HF_SUCCESS;
             }
             break;
     }
@@ -262,7 +264,8 @@ int hfCheckIp(HfPolicy* entry, u32 ip) {
 
 int hfCheckMac(HfPolicy* entry, const u8* mac) {
     if (!IS_MAC_ADDR_EMPTY(entry->mac.src) && mac) {
-        if (memcmp(entry->mac.src, mac, 6) == 0) return HF_SUCCESS;
+        if (memcmp(entry->mac.src, mac, 6) == 0)
+            return HF_SUCCESS;
     }
     return -HF_NOTFOUND;
 }
@@ -284,14 +287,17 @@ int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
     switch (entry->dest) {
         case INPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport) return HF_SUCCESS;
+                if (entry->port.dest == dport)
+                    return HF_SUCCESS;
             }
             break;
         case OUTPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport) return HF_SUCCESS;
+                if (entry->port.dest == dport)
+                    return HF_SUCCESS;
             } else if (entry->port.src && sport) {
-                if (entry->port.src == sport) return HF_SUCCESS;
+                if (entry->port.src == sport)
+                    return HF_SUCCESS;
             }
             break;
     }
