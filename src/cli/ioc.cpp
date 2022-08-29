@@ -13,6 +13,8 @@
 #define HF_IOC_POL_LIST  _IOWR(HF_IOC_MAGIC, 2, char*)
 #define HF_IOC_POL_DEL   _IOWR(HF_IOC_MAGIC, 3, char*)
 
+namespace Hf {
+
 IOCDevice::IOCDevice() {
     fd = open(DEV_NAME, O_RDWR);
 }
@@ -66,4 +68,4 @@ void IOCDevice::bulkWrite(const std::vector<std::string>& policyList) const {
     }
 }
 
-
+}

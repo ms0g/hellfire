@@ -3,6 +3,8 @@
 #include <cstring>
 #include "utils.h"
 
+namespace Hf {
+
 Policy::Policy(std::string_view p) {
     std::string_view token;
     char* svp = const_cast<char*>(p.data());
@@ -52,7 +54,7 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
             os << " DST:" << inet_pf(pol.ipaddr.dest);
-            os <<  (pol.port.src ? " SPT:" : " DPT:") << (pol.port.src ? pol.port.src : pol.port.dest);
+            os << (pol.port.src ? " SPT:" : " DPT:") << (pol.port.src ? pol.port.src : pol.port.dest);
             break;
     }
 
@@ -60,4 +62,5 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
     os << " TGT:" << (pol.target == Policy::TargetType::DROP ? "DROP" : "ACCEPT");
 
     return os;
+}
 }
