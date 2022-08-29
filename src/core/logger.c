@@ -7,8 +7,10 @@ static char buf[200];
 
 void hfLogInfo(enum HfPacketDestType dest, const char* in, const char* out, const u8* smac, const u8* dmac,
                u8 pro, size_t len, u8 tos, u8 ttl, u32 sip, u32 dip, u16 sport, u16 dport) {
-    char srcip[16] = {0}, dstip[16] = {0};
-    char srcmac[18] = {0}, dstmac[18] ={0};
+    char srcip[16] =  {0};
+    char dstip[16] =  {0};
+    char srcmac[18] = {0};
+    char dstmac[18] = {0};
 
     snprintf(srcip, sizeof(srcip), "%pI4", &sip);
     snprintf(dstip, sizeof(dstip), "%pI4", &dip);

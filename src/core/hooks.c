@@ -18,8 +18,10 @@ unsigned int hfIpIngressHook(void* priv, struct sk_buff* skb, const struct nf_ho
     const struct net_device* dev;
     const HfPolicy* pol;
     u32 sip;
-    u16 sport=0, dport=0;
-    u8 sha[ETH_ALEN], tha[ETH_ALEN];
+    u16 sport=0;
+    u16 dport=0;
+    u8 sha[ETH_ALEN];
+    u8 tha[ETH_ALEN];
 
     if (unlikely(!skb))
         return NF_DROP;
@@ -79,7 +81,8 @@ unsigned int hfIpEgressHook(void* priv, struct sk_buff* skb, const struct nf_hoo
     const struct net_device* dev;
     const HfPolicy* pol;
     u32 dip;
-    u16 sport=0, dport=0;
+    u16 sport=0;
+    u16 dport=0;
 
     if (unlikely(!skb))
         return NF_DROP;
