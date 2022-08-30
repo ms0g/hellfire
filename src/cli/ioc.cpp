@@ -74,4 +74,4 @@ void IOCDevice::bulkWrite(const std::vector<std::string>& policyList) const {
     }
 }
 
-}
+} //namespace Hf

@@ -63,4 +63,5 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
 
     return os;
 }
-}
+
+}//namespace Hf

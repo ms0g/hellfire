@@ -21,4 +21,5 @@ std::string inet_pf(uint32_t addr) {
     sa.sin_addr.s_addr = ntohl(addr);
     return inet_ntoa(sa.sin_addr);
 }
-}
+
+} //namespace Hf
