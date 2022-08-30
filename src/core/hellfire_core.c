@@ -13,7 +13,7 @@
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("M. Sami GURPINAR <sami.gurpinar@gmail.com>");
 MODULE_DESCRIPTION("Hellfire Char Device Driver");
-MODULE_VERSION("0.1");
+MODULE_VERSION("0.2");
 
 #define HF_IOC_MAGIC 0x73
 #define HF_IOC_POL_FLUSH _IO(HF_IOC_MAGIC, 1)
