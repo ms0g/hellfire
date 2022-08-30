@@ -7,8 +7,8 @@ the device file `/dev/hellfire` using `ioctl` and `write` syscall.Using `hellfir
 that include some of the following fields:
 + Direction: inbound, outbound
 + Interface: inbound, outbound
-+ Source: ip address, mac address, port number
-+ Destination: ip address, port number
++ Source: ip address, ip address range, mac address, port number
++ Destination: ip address, ip address range, port number
 + Protocol: tcp, udp, sctp, icmp
 
 Each created rule is sent to `hellfire_core` module.The module inserts a new entry
