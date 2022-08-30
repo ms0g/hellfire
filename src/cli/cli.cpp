@@ -2,6 +2,7 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 #include "utils.h"
 #include "ioc.h"
 
@@ -56,9 +57,13 @@ int main(int argc, char** argv) {
         } else if (argc == 2 && (!std::strcmp(argv[1], "-v") || !std::strcmp(argv[1], "--version"))) {
             std::cout << "hellfire version " << VERSION << std::endl;
         } else if (argc == 2 && !std::strcmp(argv[1], "start")) {
-            system("sh hellfire_load");
+            if (std::system("sh hellfire_load") != 0) {
+                std::cerr << "hellfire: Error when starting" << std::endl;
+            }
         } else if (argc == 2 && !std::strcmp(argv[1], "stop")) {
-            system("sh hellfire_unload");
+            if (std::system("sh hellfire_unload") != 0) {
+                std::cerr << "hellfire: Error when stopping" << std::endl;
+            }
         } else {
             std::cout << "hellfire version " << VERSION << "\n" << usage << std::endl;
             return EXIT_FAILURE;
