@@ -8,11 +8,11 @@
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 2
-#define VERSION_MICRO 2
+#define VERSION_PATCH 2
 
 #define STRINGIFY0(s) # s
 #define STRINGIFY(s) STRINGIFY0(s)
-#define VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_MICRO)
+#define VERSION STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH)
 
 namespace Hf {
 
@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
             break;
         }
         case Hf::Command::LIST: {
-            iocdev.read(ss.str());
+            iocdev.list(ss.str());
             break;
         }
         case Hf::Command::FLUSH:

@@ -7,7 +7,7 @@ namespace Hf {
 
 class Policy {
 public:
-    explicit Policy(std::string_view p);
+    explicit Policy(std::string_view pol);
 
     enum class DestType {
         INPUT,

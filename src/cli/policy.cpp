@@ -5,9 +5,9 @@
 
 namespace Hf {
 
-Policy::Policy(std::string_view p) {
+Policy::Policy(std::string_view pol) {
     std::string_view token;
-    char* svp = const_cast<char*>(p.data());
+    char* svp = const_cast<char*>(pol.data());
 
     while (svp != nullptr) {
         token = strsep(&svp, ".");
