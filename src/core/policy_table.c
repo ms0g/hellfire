@@ -57,10 +57,11 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
     int num;
 
     while ((chunk = (char*) strsep(&pol, ".")) != NULL) {
-        if (!strcmp(chunk, "INPUT")) {
-            p->dest = INPUT;
-        } else if (!strcmp(chunk, "OUTPUT")) {
-            p->dest = OUTPUT;
+        if (chunk[0] == 'd') {
+            if (chunk[1] == '0')
+                p->dest = INPUT;
+            else
+                p->dest = OUTPUT;
         } else if (chunk[0] == 'n') {
             if (kstrtouint(&chunk[1], 10, &num) == 0) {
                 p->id = num;
@@ -95,9 +96,9 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
             if (kstrtou16(&chunk[2], 10, &port) == 0)
                 p->port.dest = port;
         } else if (chunk[0] == 't') {
-            if (!strcmp(&chunk[1], "ACCEPT"))
+            if (chunk[1] == '0')
                 p->target = ACCEPT;
-            else if (!strcmp(&chunk[1], "DROP"))
+            else if (chunk[1] == '1')
                 p->target = DROP;
         }
     }
