@@ -1,7 +1,7 @@
 #include "policy.h"
 #include <iostream>
 #include <cstring>
-#include "utils.h"
+#include "ip.h"
 
 namespace Hf {
 
@@ -11,7 +11,7 @@ Policy::Policy(std::string_view pol) {
 
     while (svp != nullptr) {
         token = strsep(&svp, ".");
-        if (token == "(null)") {
+        if (token == "null") {
             continue;
         } else if (token.starts_with("id")) {
             id = std::stoi(&token[2]);
@@ -47,13 +47,13 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             os << " DEST:INPUT";
             os << " IFN:" << pol.interface.in;
             os << " MAC:" << pol.mac.src;
-            os << " SRC:" << inet_pf(pol.ipaddr.src);
+            os << " SRC:" << Hf::Utility::Ip::inet_pf(pol.ipaddr.src);
             os << " DPT:" << pol.port.dest;
             break;
         case Policy::DestType::OUTPUT:
             os << " DEST:OUTPUT";
             os << " IFN:" << pol.interface.out;
-            os << " DST:" << inet_pf(pol.ipaddr.dest);
+            os << " DST:" << Hf::Utility::Ip::inet_pf(pol.ipaddr.dest);
             os << (pol.port.src ? " SPT:" : " DPT:") << (pol.port.src ? pol.port.src : pol.port.dest);
             break;
     }
