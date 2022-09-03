@@ -2,4 +2,6 @@ add_executable(${PROJECT_NAME}
         cli.cpp
         ioc.cpp ioc.h
         policy.cpp policy.h
-        utils.cpp utils.h)
+        policyDB.hpp)
+
+target_link_libraries (${PROJECT_NAME} utility)

@@ -1,9 +1,9 @@
-#include "utils.h"
+#include "ip.h"
 #include <arpa/inet.h> //inet_pton
 #include <cstdlib>
 #include <cstdio>
 
-namespace Hf {
+namespace Hf::Utility::Ip {
 
 uint32_t inet_bf(const char* addr) {
     struct sockaddr_in sa{};
@@ -22,4 +22,4 @@ std::string inet_pf(uint32_t addr) {
     return inet_ntoa(sa.sin_addr);
 }
 
-} //namespace Hf
+} //namespace Hf::utility::ip

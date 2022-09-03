@@ -1,10 +1,13 @@
 #include <iostream>
+#include <utility>
 #include <cstring>
-#include <sstream>
 #include <vector>
 #include <cstdlib>
-#include "utils.h"
+#include <type_traits>
+#include "ip.h"
 #include "ioc.h"
+#include "policy.h"
+#include "policyDB.hpp"
 
 #define VERSION_MAJOR 0
 #define VERSION_MINOR 2
@@ -23,6 +26,7 @@ enum class Command {
     FLUSH
 };
 }
+
 int main(int argc, char** argv) {
     static const char* usage = "Usage: sudo hellfire [ -<flag> [<val>] | --<name> [<val>] ]...\n\n   "
                                "start                       Start firewall\n   "
@@ -47,7 +51,6 @@ int main(int argc, char** argv) {
                                "-v, --version               Display version information and exit\n   ";
 
     Hf::Command cmd;
-    // Policy Format: DEST_IF_PRO_IP_PORT_TARGET
     std::stringstream ss;
     std::vector<std::string> bulk_policies;
 
@@ -74,13 +77,13 @@ int main(int argc, char** argv) {
     for (int i = 1; i < argc; ++i) {
         if (!std::strcmp(argv[i], "-A") || !std::strcmp(argv[i], "--append")) {
             cmd = Hf::Command::APPEND;
-            ss << argv[++i] << ".";
+            !std::strcmp(argv[++i], "INPUT") ? ss << "d" << 0 << "." : ss << "d" << 1 << ".";
         } else if (!std::strcmp(argv[i], "-D") || !std::strcmp(argv[i], "--delete")) {
             cmd = Hf::Command::DELETE;
-            ss << argv[++i] << ".";
+            !std::strcmp(argv[++i], "INPUT") ? ss << "d" << 0 << "." : ss << "d" << 1 << ".";
         } else if (!std::strcmp(argv[i], "-L") || !std::strcmp(argv[i], "--list")) {
             cmd = Hf::Command::LIST;
-            ss << argv[++i] << ".";
+            !std::strcmp(argv[++i], "INPUT") ? ss << "d" << 0 << "." : ss << "d" << 1 << ".";
         } else if (!std::strcmp(argv[i], "-F") || !std::strcmp(argv[i], "--flush")) {
             cmd = Hf::Command::FLUSH;
         } else if (!std::strcmp(argv[i], "-n") || !std::strcmp(argv[i], "--num")) {
@@ -95,7 +98,7 @@ int main(int argc, char** argv) {
                 ss << "i" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-o") || !std::strcmp(argv[i], "--out-interface")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     p.append("o").append(arg).append(".");
                 }
@@ -105,14 +108,14 @@ int main(int argc, char** argv) {
             ss << "sm" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-p") || !std::strcmp(argv[i], "--protocol")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     p.append("p").append(arg).append(".");
                 }
             } else
                 ss << "p" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-s") || !std::strcmp(argv[i], "--src-ip")) {
-            ss << "si" << Hf::inet_bf(argv[++i]) << ".";
+            ss << "si" << Hf::Utility::Ip::inet_bf(argv[++i]) << ".";
         } else if (!std::strcmp(argv[i], "--src-ip-range")) {
             auto s = std::string{argv[++i]};
             auto pos = s.find(':');
@@ -120,14 +123,15 @@ int main(int argc, char** argv) {
             auto last_ip = s.substr(pos + 1);
             auto pol = ss.str();
             auto temp = pol;
-            for (uint32_t ip = Hf::inet_bf(first_ip.c_str()); ip <= Hf::inet_bf(last_ip.c_str()); ++ip) {
+            for (uint32_t ip = Hf::Utility::Ip::inet_bf(first_ip.c_str());
+                 ip <= Hf::Utility::Ip::inet_bf(last_ip.c_str()); ++ip) {
                 temp.append("si").append(std::to_string(ip)).append(".");
                 bulk_policies.emplace_back(temp);
                 temp.clear();
                 temp = pol;
             }
         } else if (!std::strcmp(argv[i], "-d") || !std::strcmp(argv[i], "--dst-ip")) {
-            ss << "di" << Hf::inet_bf(argv[++i]) << ".";
+            ss << "di" << Hf::Utility::Ip::inet_bf(argv[++i]) << ".";
         } else if (!std::strcmp(argv[i], "--dst-ip-range")) {
             auto s = std::string{argv[++i]};
             auto pos = s.find(':');
@@ -135,7 +139,8 @@ int main(int argc, char** argv) {
             auto last_ip = s.substr(pos + 1);
             auto pol = ss.str();
             auto temp = pol;
-            for (uint32_t ip = Hf::inet_bf(first_ip.c_str()); ip <= Hf::inet_bf(last_ip.c_str()); ++ip) {
+            for (uint32_t ip = Hf::Utility::Ip::inet_bf(first_ip.c_str());
+                 ip <= Hf::Utility::Ip::inet_bf(last_ip.c_str()); ++ip) {
                 temp.append("di").append(std::to_string(ip)).append(".");
                 bulk_policies.emplace_back(temp);
                 temp.clear();
@@ -143,7 +148,7 @@ int main(int argc, char** argv) {
             }
         } else if (!std::strcmp(argv[i], "--src-port")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     p.append("sp").append(arg).append(".");
                 }
@@ -151,7 +156,7 @@ int main(int argc, char** argv) {
                 ss << "sp" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "--dst-port")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     p.append("dp").append(arg).append(".");
                 }
@@ -159,31 +164,64 @@ int main(int argc, char** argv) {
                 ss << "dp" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-t") || !std::strcmp(argv[i], "--target")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
-                    p.append("t").append(arg);
+                    !std::strcmp(arg, "ACCEPT") ? p.append("t").append("0").append(".") :
+                        p.append("t").append("1").append(".");
+
                 }
-            } else
-                ss << "t" << argv[++i];
+            } else {
+                !std::strcmp(argv[++i], "ACCEPT") ? ss << "t" << 0 << "." : ss << "t" << 1 << ".";
+            }
+
         }
     }
+
+    Hf::PolicyDB policyDb{};
+    policyDb.createTable(TABLENAME,
+                         std::make_pair("DEST", "TINYINT"),
+                         std::make_pair("INTERFACE", "TEXT"),
+                         std::make_pair("PROTOCOL", "TEXT"),
+                         std::make_pair("MAC", "TEXT"),
+                         std::make_pair("IP", "INT"),
+                         std::make_pair("SPT", "SMALLINT"),
+                         std::make_pair("DPT", "SMALLINT"),
+                         std::make_pair("TARGET", "TINYINT"));
 
     Hf::IOCDevice iocdev{};
     switch (cmd) {
         case Hf::Command::APPEND: {
-            bulk_policies.empty() ? iocdev.write(ss.str()) : iocdev.bulkWrite(bulk_policies);
+            if (!bulk_policies.empty()) {
+                if (iocdev.bulkWrite(bulk_policies)) {
+                    for (const auto& pol: bulk_policies) {
+                        Hf::Policy policy{pol};
+                        policyDb.insert(TABLENAME, MAKE_TUPLE(policy));
+                    }
+                }
+            } else {
+                if (iocdev.write(ss.str())) {
+                    Hf::Policy policy{ss.str()};
+                    policyDb.insert(TABLENAME, MAKE_TUPLE(policy));
+                }
+            }
             break;
         }
         case Hf::Command::DELETE: {
-            iocdev.del(ss.str());
+            if (iocdev.del(ss.str())) {
+                Hf::Policy p{ss.str()};
+                policyDb.del(TABLENAME, MAKE_TUPLE(p));
+            }
             break;
         }
         case Hf::Command::LIST: {
-            iocdev.list(ss.str());
+            Hf::Policy p{ss.str()};
+            policyDb.read(TABLENAME, MAKE_TUPLE(p));
             break;
         }
         case Hf::Command::FLUSH:
-            iocdev.flush();
+            if (iocdev.flush()) {
+                policyDb.flush(TABLENAME);
+            }
             break;
     }
     return 0;

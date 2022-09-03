@@ -17,8 +17,7 @@ MODULE_VERSION("0.2");
 
 #define HF_IOC_MAGIC 0x73
 #define HF_IOC_POL_FLUSH _IO(HF_IOC_MAGIC, 1)
-#define HF_IOC_POL_LIST  _IOWR(HF_IOC_MAGIC, 2, char*)
-#define HF_IOC_POL_DEL   _IOWR(HF_IOC_MAGIC, 3, char*)
+#define HF_IOC_POL_DEL   _IOWR(HF_IOC_MAGIC, 2, char*)
 
 #define DEV_NAME "hellfire"
 #define BUFFER_SIZE 100
@@ -55,52 +54,9 @@ static int hfRelease(struct inode* inode, struct file* filp) {
 static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
     size_t n;
     HfQuery q;
-    char macstr[18];
-    HfPolicy* pol = NULL;
-
     memset(&q, 0, sizeof(HfQuery));
 
     switch (cmd) {
-        case HF_IOC_POL_LIST:
-            printk(KERN_INFO "%s ioctl: HF_IOC_POL_LIST\n", DEV_NAME);
-
-            if ((n = copy_from_user(device_buffer, (char*) arg, 100)) != 0) {
-                printk(KERN_ALERT "%s: couldn't copy bytes from the user space %zu\n", DEV_NAME, n);
-            }
-
-            HfParseQuery(&q, device_buffer);
-
-            if ((pol = hfFindPolicy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro,
-                                    q.ipaddr.src, q.ipaddr.dest, q.port.src, q.port.dest, q.target)) != NULL) {
-                if (pol->dest == INPUT) {
-                    snprintf(macstr, sizeof(macstr), "%pM", pol->mac.src);
-                    snprintf(device_buffer, sizeof(device_buffer), "id%d.d%d.i%s.p%s.sm%s.si%u.sp%d.dp%d.t%d",
-                             pol->id,
-                             pol->dest,
-                             pol->interface.in,
-                             pol->pro,
-                             macstr,
-                             pol->ipaddr.src,
-                             pol->port.src,
-                             pol->port.dest,
-                             pol->target);
-                } else {
-                    snprintf(device_buffer, sizeof(device_buffer), "id%d.d%d.o%s.p%s.di%u.sp%d.dp%d.t%d",
-                             pol->id,
-                             pol->dest,
-                             pol->interface.out,
-                             pol->pro,
-                             pol->ipaddr.dest,
-                             pol->port.src,
-                             pol->port.dest,
-                             pol->target);
-                }
-
-                if ((n = copy_to_user((char*) arg, device_buffer, strlen(device_buffer))) != 0) {
-                    printk(KERN_ALERT "%s: couldn't copy bytes from the kernel space %zu\n", DEV_NAME, n);
-                }
-            }
-            break;
         case HF_IOC_POL_DEL:
             printk(KERN_INFO "%s ioctl: HF_IOC_POL_DEL\n", DEV_NAME);
 
