@@ -194,14 +194,14 @@ int main(int argc, char** argv) {
             if (!bulk_policies.empty()) {
                 if (iocdev.bulkWrite(bulk_policies)) {
                     for (const auto& pol: bulk_policies) {
-                        Hf::Policy policy{pol};
-                        policyDb.insert(TABLENAME, MAKE_TUPLE(policy));
+                        Hf::Policy p{pol};
+                        policyDb.insert(TABLENAME, MAKE_TUPLE(p));
                     }
                 }
             } else {
                 if (iocdev.write(ss.str())) {
-                    Hf::Policy policy{ss.str()};
-                    policyDb.insert(TABLENAME, MAKE_TUPLE(policy));
+                    Hf::Policy p{ss.str()};
+                    policyDb.insert(TABLENAME, MAKE_TUPLE(p));
                 }
             }
             break;
