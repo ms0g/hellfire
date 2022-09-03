@@ -11,15 +11,13 @@ public:
 
     ~IOCDevice();
 
-    void write(std::string_view policy) const;
+    [[nodiscard]] bool write(std::string_view policy) const;
 
-    void bulkWrite(const std::vector<std::string>& policyList) const;
+    [[nodiscard]] bool bulkWrite(const std::vector<std::string>& policyList) const;
 
-    void read(std::string_view query);
+    [[nodiscard]] bool flush() const;
 
-    void del(std::string_view query);
-
-    void flush() const;
+    [[nodiscard]] bool del(std::string_view query);
 
 private:
     int fd;
