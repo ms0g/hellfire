@@ -39,16 +39,6 @@ std::string unpack(T&& t, Rest&& ... rest) {
     return unpack(std::forward<T>(t)) + unpack(std::forward<Rest>(rest)...);
 }
 
-// Sqlite callback
-static int callback(void* data, int argc, char** argv, char** colName) {
-    for (int i = 0; i < argc; i++) {
-        printf("%s = %s ", colName[i], argv[i] ? argv[i] : "NULL");
-    }
-
-    printf("\n");
-    return 0;
-}
-
 class PolicyDB {
 public:
     PolicyDB() : m_db(std::make_unique<Utility::SQLiteDB>(m_dbName)) {}
@@ -128,7 +118,13 @@ void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
     if (std::get<7>(p)) {
         ss << " AND TARGET=" << std::get<7>(p);
     }
-    m_db->exec(ss.str().c_str(), &callback);
+    m_db->exec(ss.str().c_str(), [](void* data, int argc, char** argv, char** colName) {
+        for (int i = 0; i < argc; i++) {
+            std::cout << colName[i] << "=" << (argv[i] ? argv[i] : "NULL") << " ";
+        }
+        std::cout << "\n";
+        return 0;
+    });
 }
 
 template<typename... Params>
