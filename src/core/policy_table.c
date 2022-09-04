@@ -27,14 +27,14 @@ static inline int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sp
 
 static inline int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport);
 
-void hfCreatePolicy(char* pol) {
+int hfCreatePolicy(char* pol) {
     static unsigned id = 1;
     unsigned long flags;
     HfPolicy* p;
 
     if ((p = (HfPolicy*) kmalloc(sizeof(HfPolicy), GFP_KERNEL)) == NULL) {
         printk(KERN_ALERT "hellfire: kmalloc failed\n");
-        return;
+        return -1;
     }
 
     memset(p, 0, sizeof(HfPolicy));
@@ -49,6 +49,7 @@ void hfCreatePolicy(char* pol) {
     list_add_tail(&p->list, &policy_table);
     spin_unlock_irqrestore(&slock, flags);
     ++id;
+    return 0;
 }
 
 void hfParsePolicy(HfPolicy* p, char* pol) {
@@ -106,7 +107,7 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
 }
 
 
-void hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
+int hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
                     const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
     HfPolicy* entry;
     unsigned long flags;
@@ -126,10 +127,12 @@ void hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const ch
             kfree(entry->pro);
         kfree(entry);
         spin_unlock_irqrestore(&slock, flags);
+        return 0;
     }
+    return -1;
 }
 
-void hfCleanPolicyTable(void) {
+int hfCleanPolicyTable(void) {
     struct list_head* curr, * next;
     unsigned long flags;
     HfPolicy* entry;
@@ -152,6 +155,7 @@ void hfCleanPolicyTable(void) {
         kfree(entry);
     }
     spin_unlock_irqrestore(&slock, flags);
+    return 0;
 }
 
 HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,

@@ -66,9 +66,21 @@ static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
 
             HfParseQuery(&q, device_buffer);
 
-            hfDeletePolicy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
-                           q.ipaddr.dest, q.port.src, q.port.dest, q.target);
-            printk(KERN_INFO "%s: deleted the policy %d\n", DEV_NAME, q.id);
+            memset(device_buffer, 0, sizeof(device_buffer));
+
+            if (hfDeletePolicy(q.id, q.dest, q.interface.in, q.interface.out, q.mac.src, q.pro, q.ipaddr.src,
+                               q.ipaddr.dest, q.port.src, q.port.dest, q.target) == -1) {
+                strcpy(device_buffer, "fail");
+                printk(KERN_INFO "%s: failed to delete the policy\n", DEV_NAME);
+            } else {
+                strcpy(device_buffer, "success");
+                printk(KERN_INFO "%s: success to delete the policy\n", DEV_NAME);
+            }
+
+            if ((n = copy_to_user((char*) arg, device_buffer, strlen(device_buffer))) != 0) {
+                printk(KERN_ALERT "%s: couldn't copy bytes from the kernel space %zu\n", DEV_NAME, n);
+            }
+
             break;
         case HF_IOC_POL_FLUSH:
             hfCleanPolicyTable();

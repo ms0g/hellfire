@@ -39,14 +39,14 @@ typedef struct {
 HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
                        const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
 
-void hfCreatePolicy(char* pol);
+int hfCreatePolicy(char* pol);
 
 void hfParsePolicy(HfPolicy* p, char* pol);
 
-void hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
+int hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
                     const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
 
-void hfCleanPolicyTable(void);
+int hfCleanPolicyTable(void);
 
 #define HfParseQuery(q, s) hfParsePolicy(q, s)
 
