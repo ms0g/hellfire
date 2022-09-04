@@ -3,8 +3,9 @@
 #include <linux/slab.h>
 #include "macros.h"
 
-#define HF_SUCCESS 0
-#define HF_NOTFOUND 1
+#define HFNOMATCH  -1
+#define HFSUCCESS   0
+#define HFNOOP      1
 
 static LIST_HEAD(policy_table);
 
@@ -183,25 +184,25 @@ HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const
 HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
                              const char* pro, u32 sip, u16 sport, u16 dport) {
     int found = 0;
-    if (hfCheckInf(entry, in) == 0) {
+    if (hfCheckInf(entry, in) == HFSUCCESS) {
         found = 1;
-        if (hfCheckIp(entry, sip) != 0) {
+        if (hfCheckIp(entry, sip) == HFNOMATCH) {
             found = 0;
-        } else if (hfCheckMac(entry, sha) != 0) {
+        } else if (hfCheckMac(entry, sha) == HFNOMATCH) {
             found = 0;
         }
-        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) == HFNOMATCH)
             found = 0;
-    } else if (hfCheckMac(entry, sha) == 0) {
+    } else if (hfCheckMac(entry, sha) == HFSUCCESS) {
         found = 1;
-        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) == HFNOMATCH)
             found = 0;
-    } else if (hfCheckPro(entry, pro, found, sport, dport) == 0) {
+    } else if (hfCheckPro(entry, pro, found, sport, dport) == HFSUCCESS) {
         found = 1;
-        if (hfCheckIp(entry, sip) != 0) {
+        if (hfCheckIp(entry, sip) == HFNOMATCH) {
             found = 0;
         }
-    } else if (hfCheckIp(entry, sip) == 0) {
+    } else if (hfCheckIp(entry, sip) == HFSUCCESS) {
         found = 1;
     }
 
@@ -215,19 +216,19 @@ HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
 
 HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, u32 dip, u16 sport, u16 dport) {
     int found = 0;
-    if (hfCheckInf(entry, out) == 0) {
+    if (hfCheckInf(entry, out) == HFSUCCESS) {
         found = 1;
-        if (hfCheckIp(entry, dip) != 0) {
+        if (hfCheckIp(entry, dip) == HFNOMATCH) {
             found = 0;
         }
-        if (hfCheckPro(entry, pro, found, sport, dport) != 0)
+        if (hfCheckPro(entry, pro, found, sport, dport) == HFNOMATCH)
             found = 0;
-    } else if (hfCheckPro(entry, pro, found, sport, dport) == 0) {
+    } else if (hfCheckPro(entry, pro, found, sport, dport) == HFSUCCESS) {
         found = 1;
-        if (hfCheckIp(entry, dip) != 0) {
+        if (hfCheckIp(entry, dip) == HFNOMATCH) {
             found = 0;
         }
-    } else if (hfCheckIp(entry, dip) == 0) {
+    } else if (hfCheckIp(entry, dip) == HFSUCCESS) {
         found = 1;
     }
 
@@ -240,9 +241,10 @@ HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, 
 int hfCheckInf(HfPolicy* entry, const char* in) {
     if (entry->interface.in && in) {
         if (IS_EQUAL(entry->interface.in, in))
-            return HF_SUCCESS;
+            return HFSUCCESS;
+        else return HFNOMATCH;
     }
-    return -HF_NOTFOUND;
+    return HFNOOP;
 }
 
 int hfCheckIp(HfPolicy* entry, u32 ip) {
@@ -250,38 +252,41 @@ int hfCheckIp(HfPolicy* entry, u32 ip) {
         case INPUT:
             if (entry->ipaddr.src && ip) {
                 if (entry->ipaddr.src == ip)
-                    return HF_SUCCESS;
+                    return HFSUCCESS;
+                else return HFNOMATCH;
             }
             break;
         case OUTPUT:
             if (entry->ipaddr.dest && ip) {
                 if (entry->ipaddr.dest == ip)
-                    return HF_SUCCESS;
+                    return HFSUCCESS;
+                else return HFNOMATCH;
             }
             break;
     }
-    return -HF_NOTFOUND;
+    return HFNOOP;
 }
 
 int hfCheckMac(HfPolicy* entry, const u8* mac) {
     if (!IS_MAC_ADDR_EMPTY(entry->mac.src) && mac) {
         if (memcmp(entry->mac.src, mac, 6) == 0)
-            return HF_SUCCESS;
+            return HFSUCCESS;
+        else return -HFNOMATCH;
     }
-    return -HF_NOTFOUND;
+    return HFNOOP;
 }
 
 int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport) {
     if (state && entry->pro && pro) {
         if (!IS_EQUAL(entry->pro, pro))
-            return -HF_NOTFOUND;
+            return HFNOMATCH;
 
         if (!IS_EQUAL(entry->pro, "icmp"))
             return hfCheckPort(entry, sport, dport);
         else
-            return HF_SUCCESS;
+            return HFSUCCESS;
     }
-    return -HF_NOTFOUND;
+    return HFNOOP;
 }
 
 int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
@@ -289,18 +294,21 @@ int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
         case INPUT:
             if (entry->port.dest && dport) {
                 if (entry->port.dest == dport)
-                    return HF_SUCCESS;
+                    return HFSUCCESS;
+                else return HFNOMATCH;
             }
             break;
         case OUTPUT:
             if (entry->port.dest && dport) {
                 if (entry->port.dest == dport)
-                    return HF_SUCCESS;
+                    return HFSUCCESS;
+                else return HFNOMATCH;
             } else if (entry->port.src && sport) {
                 if (entry->port.src == sport)
-                    return HF_SUCCESS;
+                    return HFSUCCESS;
+                else return HFNOMATCH;
             }
             break;
     }
-    return -HF_NOTFOUND;
+    return HFNOOP;
 }
