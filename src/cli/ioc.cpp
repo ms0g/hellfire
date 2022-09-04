@@ -46,7 +46,10 @@ bool IOCDevice::del(std::string_view query) {
         std::cerr << DEV_NAME << " ioctl: HF_IOC_POL_DEL Error\n";
         return false;
     }
-    return true;
+
+    if (std::string_view{buf}.starts_with("success"))
+        return true;
+    return false;
 }
 
 bool IOCDevice::bulkWrite(const std::vector<std::string>& policyList) const {

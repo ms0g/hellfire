@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
             ss << "n" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-i") || !std::strcmp(argv[i], "--in-interface")) {
             if (!bulk_policies.empty()) {
-                auto arg = std::string_view{argv[++i]};
+                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     p.append("i").append(arg).append(".");
                 }
@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
                 auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
                     !std::strcmp(arg, "ACCEPT") ? p.append("t").append("0").append(".") :
-                        p.append("t").append("1").append(".");
+                    p.append("t").append("1").append(".");
 
                 }
             } else {
