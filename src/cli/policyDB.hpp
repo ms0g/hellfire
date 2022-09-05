@@ -57,6 +57,8 @@ public:
 
     void flush(std::string_view tableName);
 
+    void changes(std::string_view tableName);
+
 private:
     std::unique_ptr<Utility::DB> m_db;
     static constexpr char* const m_dbName = (char*) "hellfire.db";
@@ -120,7 +122,17 @@ void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
     }
     m_db->exec(ss.str().c_str(), [](void* data, int argc, char** argv, char** colName) {
         for (int i = 0; i < argc; i++) {
-            std::cout << colName[i] << "=" << (argv[i] ? argv[i] : "NULL") << " ";
+            std::string_view arg{argv[i]};
+            if (!arg.empty()){
+                if (!std::strcmp(colName[i], "DEST")) {
+                    arg = Hf::toDestPf(arg);
+                } else if (!std::strcmp(colName[i], "TARGET")) {
+                    arg = Hf::toTargetPf(arg);
+                } else if (!std::strcmp(colName[i], "IP")) {
+                    arg = Hf::Utility::Ip::inet_pf(std::stol(arg.data()));
+                }
+            }
+            std::cout << colName[i] << "=" << (!arg.empty() ? arg : "null") << " ";
         }
         std::cout << "\n";
         return 0;
@@ -160,5 +172,16 @@ void PolicyDB::flush(std::string_view tableName) {
     std::stringstream ss;
     ss << "DELETE FROM " << tableName;
     m_db->exec(ss.str().c_str(), nullptr);
+}
+
+void PolicyDB::changes(std::string_view tableName) {
+    std::string_view sw = "SELECT changes();";
+    m_db->exec(sw.data(), [](void* data, int argc, char** argv, char** colName) {
+        for (int i = 0; i < argc; i++) {
+            std::cout << colName[i] << "=" << (argv[i] ? argv[i] : "NULL") << " ";
+        }
+        std::cout << "\n";
+        return 0;
+    });
 }
 }

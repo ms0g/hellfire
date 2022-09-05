@@ -64,4 +64,22 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
     return os;
 }
 
+std::string toDestPf(std::string_view n) {
+    switch (static_cast<Policy::DestType>(std::stoi(n.data()))) {
+        case Policy::DestType::INPUT:
+            return "INPUT";
+        case Policy::DestType::OUTPUT:
+            return "OUTPUT";
+    }
+}
+
+std::string toTargetPf(std::string_view n) {
+    switch (static_cast<Policy::TargetType>(std::stoi(n.data()))) {
+        case Policy::TargetType::ACCEPT:
+            return "ACCEPT";
+        case Policy::TargetType::DROP:
+            return "DROP";
+    }
+}
+
 }//namespace Hf

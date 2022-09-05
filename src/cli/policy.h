@@ -5,6 +5,9 @@
 
 namespace Hf {
 
+std::string toDestPf(std::string_view n);
+std::string toTargetPf(std::string_view n);
+
 class Policy {
 public:
     explicit Policy(std::string_view pol);

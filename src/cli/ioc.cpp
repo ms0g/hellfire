@@ -47,8 +47,10 @@ bool IOCDevice::del(std::string_view query) {
         return false;
     }
 
-    if (std::string_view{buf}.starts_with("success"))
+    if (std::string_view{buf}.starts_with("success")) {
+        std::cout << DEV_NAME << " ioctl: Deleted the policy\n";
         return true;
+    }
     return false;
 }
 
