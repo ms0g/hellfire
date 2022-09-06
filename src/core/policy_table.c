@@ -244,9 +244,7 @@ HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, 
 
 int hfCheckInf(HfPolicy* entry, const char* in) {
     if (entry->interface.in && in) {
-        if (IS_EQUAL(entry->interface.in, in))
-            return HFSUCCESS;
-        else return HFNOMATCH;
+        return IS_EQUAL(entry->interface.in, in) ? HFSUCCESS : HFNOMATCH;
     }
     return HFNOOP;
 }
@@ -255,16 +253,12 @@ int hfCheckIp(HfPolicy* entry, u32 ip) {
     switch (entry->dest) {
         case INPUT:
             if (entry->ipaddr.src && ip) {
-                if (entry->ipaddr.src == ip)
-                    return HFSUCCESS;
-                else return HFNOMATCH;
+                return entry->ipaddr.src == ip ? HFSUCCESS : HFNOMATCH;
             }
             break;
         case OUTPUT:
             if (entry->ipaddr.dest && ip) {
-                if (entry->ipaddr.dest == ip)
-                    return HFSUCCESS;
-                else return HFNOMATCH;
+                return entry->ipaddr.dest == ip ? HFSUCCESS : HFNOMATCH;
             }
             break;
     }
@@ -273,9 +267,7 @@ int hfCheckIp(HfPolicy* entry, u32 ip) {
 
 int hfCheckMac(HfPolicy* entry, const u8* mac) {
     if (!IS_MAC_ADDR_EMPTY(entry->mac.src) && mac) {
-        if (memcmp(entry->mac.src, mac, 6) == 0)
-            return HFSUCCESS;
-        else return HFNOMATCH;
+        return memcmp(entry->mac.src, mac, 6) == 0 ? HFSUCCESS : HFNOMATCH;
     }
     return HFNOOP;
 }
@@ -284,11 +276,8 @@ int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport
     if (state && entry->pro && pro) {
         if (!IS_EQUAL(entry->pro, pro))
             return HFNOMATCH;
+        return !IS_EQUAL(entry->pro, "icmp") ? hfCheckPort(entry, sport, dport) : HFSUCCESS;
 
-        if (!IS_EQUAL(entry->pro, "icmp"))
-            return hfCheckPort(entry, sport, dport);
-        else
-            return HFSUCCESS;
     }
     return HFNOOP;
 }
@@ -297,20 +286,14 @@ int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
     switch (entry->dest) {
         case INPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport)
-                    return HFSUCCESS;
-                else return HFNOMATCH;
+                return entry->port.dest == dport ? HFSUCCESS : HFNOMATCH;
             }
             break;
         case OUTPUT:
             if (entry->port.dest && dport) {
-                if (entry->port.dest == dport)
-                    return HFSUCCESS;
-                else return HFNOMATCH;
+                return entry->port.dest == dport ? HFSUCCESS : HFNOMATCH;
             } else if (entry->port.src && sport) {
-                if (entry->port.src == sport)
-                    return HFSUCCESS;
-                else return HFNOMATCH;
+                return entry->port.src == sport ? HFSUCCESS : HFNOMATCH;
             }
             break;
     }
