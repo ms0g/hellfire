@@ -275,7 +275,7 @@ int hfCheckMac(HfPolicy* entry, const u8* mac) {
     if (!IS_MAC_ADDR_EMPTY(entry->mac.src) && mac) {
         if (memcmp(entry->mac.src, mac, 6) == 0)
             return HFSUCCESS;
-        else return -HFNOMATCH;
+        else return HFNOMATCH;
     }
     return HFNOOP;
 }
