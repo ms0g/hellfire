@@ -2,6 +2,7 @@
 
 #include <string>
 #include <string_view>
+#include "protocols.h"
 
 namespace Hf {
 
@@ -25,7 +26,7 @@ public:
         std::string in;                 /* Ingress interface        */
         std::string out;                /* Egress interface         */
     } interface;
-    std::string pro;                    /* Protocol                 */
+    Utility::ProtType pro;              /* Protocol                 */
     struct {
         std::string src;                /* Source MAC Address       */
     } mac;

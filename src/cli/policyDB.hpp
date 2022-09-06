@@ -15,7 +15,8 @@
         p.dest == Hf::Policy::DestType::INPUT ?                                                 \
             (!p.interface.in.empty() ? p.interface.in: "null"): (!p.interface.out.empty() ?     \
                 p.interface.out: "null"),                                                       \
-        !p.pro.empty() ? p.pro : "null",                                                        \
+        static_cast<std::underlying_type_t<decltype(p.pro)>>(p.pro) != 0 ?                      \
+            static_cast<std::underlying_type_t<decltype(p.pro)>>(p.pro) : 0,                    \
         !p.mac.src.empty() ? p.mac.src : "null",                                                \
         p.dest == Hf::Policy::DestType::INPUT ?                                                 \
             (p.ipaddr.src ? p.ipaddr.src : 0): (p.ipaddr.dest ? p.ipaddr.dest : 0),             \
@@ -83,7 +84,7 @@ void PolicyDB::insert(std::string_view tableName, std::tuple<Params...> p) {
     ss << "INSERT INTO " << tableName << "(DEST,INTERFACE,PROTOCOL,MAC,IP,SPT,DPT,TARGET)" << " VALUES(";
     ss << std::get<0>(p) << ","
        << "'" << std::get<1>(p) << "'" << ","
-       << "'" << std::get<2>(p) << "'" << ","
+       << std::get<2>(p) << ","
        << "'" << std::get<3>(p) << "'" << ","
        << std::get<4>(p) << ","
        << std::get<5>(p) << ","
@@ -102,8 +103,8 @@ void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
     if (std::get<1>(p) != "null") {
         ss << " AND INTERFACE=" << "'" << std::get<1>(p) << "'";
     }
-    if (std::get<2>(p) != "null") {
-        ss << " AND PROTOCOL=" << "'" << std::get<2>(p) << "'";
+    if (std::get<2>(p)) {
+        ss << " AND PROTOCOL=" << std::get<2>(p);
     }
     if (std::get<3>(p) != "null") {
         ss << " AND MAC=" << "'" << std::get<3>(p) << "'";
@@ -123,7 +124,7 @@ void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
     m_db->exec(ss.str().c_str(), [](void* data, int argc, char** argv, char** colName) {
         for (int i = 0; i < argc; i++) {
             std::string_view arg{argv[i]};
-            if (!arg.empty()){
+            if (!arg.empty()) {
                 if (!std::strcmp(colName[i], "DEST")) {
                     arg = Hf::toDestPf(arg);
                 } else if (!std::strcmp(colName[i], "TARGET")) {
@@ -147,8 +148,8 @@ void PolicyDB::del(std::string_view tableName, std::tuple<Params...> p) {
     if (std::get<1>(p) != "null") {
         ss << " AND INTERFACE=" << "'" << std::get<1>(p) << "'";
     }
-    if (std::get<2>(p) != "null") {
-        ss << " AND PROTOCOL=" << "'" << std::get<2>(p) << "'";
+    if (std::get<2>(p)) {
+        ss << " AND PROTOCOL=" << std::get<2>(p);
     }
     if (std::get<3>(p) != "null") {
         ss << " AND MAC=" << "'" << std::get<3>(p) << "'";

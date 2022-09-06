@@ -32,7 +32,7 @@ Policy::Policy(std::string_view pol) {
         } else if (token.starts_with('o')) {
             interface.out = std::string{&token[1]};
         } else if (token.starts_with('p')) {
-            pro = std::string{&token[1]};
+            pro = static_cast<Utility::ProtType>(std::stoi(&token[1]));
         } else if (token.starts_with('t')) {
             target = static_cast<TargetType>(std::stoi(&token[1]));
         }
@@ -58,7 +58,7 @@ std::ostream& operator<<(std::ostream& os, const Policy& pol) {
             break;
     }
 
-    os << " PRO:" << pol.pro;
+    os << " PRO:" << Hf::Utility::protNtop(pol.pro);
     os << " TGT:" << (pol.target == Policy::TargetType::DROP ? "DROP" : "ACCEPT");
 
     return os;

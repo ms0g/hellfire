@@ -7,6 +7,7 @@
 #include "ip.h"
 #include "ioc.h"
 #include "policy.h"
+#include "protocols.h"
 #include "policyDB.hpp"
 
 #define VERSION_MAJOR 0
@@ -107,13 +108,14 @@ int main(int argc, char** argv) {
         } else if (!std::strcmp(argv[i], "--src-mac")) {
             ss << "sm" << argv[++i] << ".";
         } else if (!std::strcmp(argv[i], "-p") || !std::strcmp(argv[i], "--protocol")) {
+            auto arg = Hf::Utility::protPton(argv[++i]);
             if (!bulk_policies.empty()) {
-                auto arg = argv[++i];
                 for (auto& p: bulk_policies) {
-                    p.append("p").append(arg).append(".");
+                    p.append("p").append(std::to_string(
+                            static_cast<std::underlying_type_t<decltype(arg)>>(arg))).append(".");
                 }
             } else
-                ss << "p" << argv[++i] << ".";
+                ss << "p" << static_cast<std::underlying_type_t<decltype(arg)>>(arg) << ".";
         } else if (!std::strcmp(argv[i], "-s") || !std::strcmp(argv[i], "--src-ip")) {
             ss << "si" << Hf::Utility::Ip::inet_bf(argv[++i]) << ".";
         } else if (!std::strcmp(argv[i], "--src-ip-range")) {
@@ -181,7 +183,7 @@ int main(int argc, char** argv) {
     policyDb.createTable(TABLENAME,
                          std::make_pair("DEST", "TINYINT"),
                          std::make_pair("INTERFACE", "TEXT"),
-                         std::make_pair("PROTOCOL", "TEXT"),
+                         std::make_pair("PROTOCOL", "TINYINT"),
                          std::make_pair("MAC", "TEXT"),
                          std::make_pair("IP", "INT"),
                          std::make_pair("SPT", "SMALLINT"),
