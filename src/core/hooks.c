@@ -34,31 +34,29 @@ unsigned int hfIpIngressHook(void* priv, struct sk_buff* skb, const struct nf_ho
 
     iph = ip_hdr(skb);
     sip = ntohl(iph->saddr);
-    switch (iph->protocol) {
-        case IPPROTO_ICMP:
-            pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, "icmp", sip, 0, 0, 0, 0);
-            break;
-        case IPPROTO_UDP:
-            udp = udp_hdr(skb);
-            sport = ntohs(udp->source);
-            dport = ntohs(udp->dest);
 
-            pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, "udp", sip, 0, sport, dport, 0);
-            break;
-        case IPPROTO_TCP:
-            tcp = tcp_hdr(skb);
-            sport = ntohs(tcp->source);
-            dport = ntohs(tcp->dest);
+    if (iph->protocol == IPPROTO_ICMP) {
+        pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, iph->protocol, sip, 0, 0, 0, 0);
+    } else {
+        switch (iph->protocol) {
+            case IPPROTO_UDP:
+                udp = udp_hdr(skb);
+                sport = ntohs(udp->source);
+                dport = ntohs(udp->dest);
+                break;
+            case IPPROTO_TCP:
+                tcp = tcp_hdr(skb);
+                sport = ntohs(tcp->source);
+                dport = ntohs(tcp->dest);
+                break;
+            case IPPROTO_SCTP:
+                sctp = sctp_hdr(skb);
+                sport = ntohs(sctp->source);
+                dport = ntohs(sctp->dest);
+                break;
+        }
+        pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, iph->protocol, sip, 0, sport, dport, 0);
 
-            pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, "tcp", sip, 0, sport, dport, 0);
-            break;
-        case IPPROTO_SCTP:
-            sctp = sctp_hdr(skb);
-            sport = ntohs(sctp->source);
-            dport = ntohs(sctp->dest);
-
-            pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, "sctp", sip, 0, sport, dport, 0);
-            break;
     }
 
     if (pol) {
@@ -91,31 +89,28 @@ unsigned int hfIpEgressHook(void* priv, struct sk_buff* skb, const struct nf_hoo
 
     iph = ip_hdr(skb);
     dip = ntohl(iph->daddr);
-    switch (iph->protocol) {
-        case IPPROTO_ICMP:
-            pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, "icmp", 0, dip, 0, 0, 0);
-            break;
-        case IPPROTO_UDP:
-            udp = udp_hdr(skb);
-            sport = ntohs(udp->source);
-            dport = ntohs(udp->dest);
 
-            pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, "udp", 0, dip, sport, dport, 0);
-            break;
-        case IPPROTO_TCP:
-            tcp = tcp_hdr(skb);
-            sport = ntohs(tcp->source);
-            dport = ntohs(tcp->dest);
-
-            pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, "tcp", 0, dip, sport, dport, 0);
-            break;
-        case IPPROTO_SCTP:
-            sctp = sctp_hdr(skb);
-            sport = ntohs(sctp->source);
-            dport = ntohs(sctp->dest);
-
-            pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, "sctp", 0, dip, sport, dport, 0);
-            break;
+    if (iph->protocol == IPPROTO_ICMP) {
+        pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, iph->protocol, 0, dip, 0, 0, 0);
+    } else {
+        switch (iph->protocol) {
+            case IPPROTO_UDP:
+                udp = udp_hdr(skb);
+                sport = ntohs(udp->source);
+                dport = ntohs(udp->dest);
+                break;
+            case IPPROTO_TCP:
+                tcp = tcp_hdr(skb);
+                sport = ntohs(tcp->source);
+                dport = ntohs(tcp->dest);
+                break;
+            case IPPROTO_SCTP:
+                sctp = sctp_hdr(skb);
+                sport = ntohs(sctp->source);
+                dport = ntohs(sctp->dest);
+                break;
+        }
+        pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, iph->protocol, 0, dip, sport, dport, 0);
     }
 
     if (pol) {

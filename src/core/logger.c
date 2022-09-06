@@ -23,11 +23,11 @@ void hfLogInfo(enum HfPacketDestType dest, const char* in, const char* out, cons
 
     switch (dest) {
         case INPUT:
-            snprintf(buf, 200, log_tmp, "INBOUND", in, "", srcmac, dstmac, srcip, dstip, prot_ntop(pro),
+            snprintf(buf, 200, log_tmp, "INBOUND", in, "", srcmac, dstmac, srcip, dstip, hfProtNtop(pro),
                      len, tos, ttl, sport, dport);
             break;
         case OUTPUT:
-            snprintf(buf, 200, log_tmp, "OUTBOUND", "", out, srcmac, dstmac, srcip, dstip, prot_ntop(pro),
+            snprintf(buf, 200, log_tmp, "OUTBOUND", "", out, srcmac, dstmac, srcip, dstip, hfProtNtop(pro),
                      len, tos, ttl, sport, dport);
             break;
 

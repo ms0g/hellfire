@@ -1,6 +1,7 @@
 #include "policy_table.h"
 #include <linux/spinlock.h>
 #include <linux/slab.h>
+#include <linux/in.h>
 #include "macros.h"
 
 #define HFNOMATCH  -1
@@ -12,10 +13,10 @@ static LIST_HEAD(policy_table);
 static DEFINE_SPINLOCK(slock);
 
 static HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
-                                    const char* pro, u32 sip, u16 sport, u16 dport);
+                                    u8 pro, u32 sip, u16 sport, u16 dport);
 
 static HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out,
-                                    const char* pro, u32 dip, u16 sport, u16 dport);
+                                    u8 pro, u32 dip, u16 sport, u16 dport);
 
 static inline int hfCheckInf(HfPolicy* entry, const char* in);
 
@@ -23,7 +24,7 @@ static inline int hfCheckIp(HfPolicy* entry, u32 ip);
 
 static inline int hfCheckMac(HfPolicy* entry, const u8* mac);
 
-static inline int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport);
+static inline int hfCheckPro(HfPolicy* entry, u8 pro, int state, u16 sport, u16 dport);
 
 static inline int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport);
 
@@ -56,6 +57,7 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
     char* chunk;
     u32 ip;
     u16 port;
+    u8 pro;
     int num;
 
     while ((chunk = (char*) strsep(&pol, ".")) != NULL) {
@@ -75,8 +77,8 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
             p->interface.out = kmalloc(strlen(&chunk[1]), GFP_KERNEL);
             strcpy(p->interface.out, &chunk[1]);
         } else if (chunk[0] == 'p') {
-            p->pro = kmalloc(strlen(&chunk[1]), GFP_KERNEL);
-            strcpy(p->pro, &chunk[1]);
+            if (kstrtou8(&chunk[1], 10, &pro) == 0)
+                p->pro = pro;
         } else if (!strncmp(chunk, "sm", 2)) {
             sscanf(&chunk[2], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
                    &p->mac.src[0],
@@ -108,7 +110,7 @@ void hfParsePolicy(HfPolicy* p, char* pol) {
 
 
 int hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
-                    const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
+                    u8 pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
     HfPolicy* entry;
     unsigned long flags;
 
@@ -123,8 +125,6 @@ int hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const cha
                 kfree(entry->interface.out);
         }
 
-        if (entry->pro)
-            kfree(entry->pro);
         kfree(entry);
         spin_unlock_irqrestore(&slock, flags);
         return 0;
@@ -150,8 +150,6 @@ int hfCleanPolicyTable(void) {
                 kfree(entry->interface.out);
         }
 
-        if (entry->pro)
-            kfree(entry->pro);
         kfree(entry);
     }
     spin_unlock_irqrestore(&slock, flags);
@@ -159,7 +157,7 @@ int hfCleanPolicyTable(void) {
 }
 
 HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
-                       const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
+                       u8 pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target) {
     HfPolicy* entry;
     unsigned long flags;
 
@@ -186,7 +184,7 @@ HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const
 }
 
 HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
-                             const char* pro, u32 sip, u16 sport, u16 dport) {
+                             u8 pro, u32 sip, u16 sport, u16 dport) {
     int found = 0;
     if (hfCheckInf(entry, in) == HFSUCCESS) {
         found = 1;
@@ -201,7 +199,7 @@ HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
         found = 1;
         if (hfCheckPro(entry, pro, found, sport, dport) == HFNOMATCH)
             found = 0;
-    } else if (hfCheckPro(entry, pro, found, sport, dport) == HFSUCCESS) {
+    } else if (hfCheckPro(entry, pro, 1, sport, dport) == HFSUCCESS) {
         found = 1;
         if (hfCheckIp(entry, sip) == HFNOMATCH) {
             found = 0;
@@ -218,7 +216,7 @@ HfPolicy* hfCheckIncomingPkt(HfPolicy* entry, const char* in, const u8* sha,
 }
 
 
-HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, const char* pro, u32 dip, u16 sport, u16 dport) {
+HfPolicy* hfCheckOutgoingPkt(HfPolicy* entry, const char* out, u8 pro, u32 dip, u16 sport, u16 dport) {
     int found = 0;
     if (hfCheckInf(entry, out) == HFSUCCESS) {
         found = 1;
@@ -272,11 +270,11 @@ int hfCheckMac(HfPolicy* entry, const u8* mac) {
     return HFNOOP;
 }
 
-int hfCheckPro(HfPolicy* entry, const char* pro, int state, u16 sport, u16 dport) {
+int hfCheckPro(HfPolicy* entry, u8 pro, int state, u16 sport, u16 dport) {
     if (state && entry->pro && pro) {
-        if (!IS_EQUAL(entry->pro, pro))
+        if (entry->pro != pro)
             return HFNOMATCH;
-        return !IS_EQUAL(entry->pro, "icmp") ? hfCheckPort(entry, sport, dport) : HFSUCCESS;
+        return entry->pro !=  IPPROTO_ICMP ? hfCheckPort(entry, sport, dport) : HFSUCCESS;
 
     }
     return HFNOOP;

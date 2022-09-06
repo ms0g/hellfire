@@ -20,7 +20,7 @@ typedef struct {
         char* in;                       /* Ingress interface        */
         char* out;                      /* Egress interface         */
     } interface;
-    char* pro;                          /* Protocol                 */
+    u8 pro;                             /* Protocol                 */
     union {
         u8 src[6];                      /* Source MAC address        */
     } mac;
@@ -37,14 +37,14 @@ typedef struct {
 } HfPolicy;
 
 HfPolicy* hfFindPolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
-                       const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
+                       u8 pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
 
 int hfCreatePolicy(char* pol);
 
 void hfParsePolicy(HfPolicy* p, char* pol);
 
 int hfDeletePolicy(int id, enum HfPacketDestType dest, const char* in, const char* out, const u8* sha,
-                    const char* pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
+                    u8 pro, u32 sip, u32 dip, u16 sport, u16 dport, enum HfTargetType target);
 
 int hfCleanPolicyTable(void);
 
