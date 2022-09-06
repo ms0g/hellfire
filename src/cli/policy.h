@@ -5,9 +5,6 @@
 
 namespace Hf {
 
-std::string toDestPf(std::string_view n);
-std::string toTargetPf(std::string_view n);
-
 class Policy {
 public:
     explicit Policy(std::string_view pol);
@@ -44,5 +41,8 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const Policy& ep);
 };
+
+std::string toDestPf(std::string_view n);
+std::string toTargetPf(std::string_view n);
 
 } //namespace Hf
