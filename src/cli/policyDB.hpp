@@ -7,25 +7,6 @@
 #include "db.h"
 #include "policy.h"
 
-#define TABLENAME "POLICY"
-
-#define MAKE_TUPLE(p)                                                                           \
-    std::make_tuple(                                                                            \
-        static_cast<std::underlying_type_t<decltype(p.dest)>>(p.dest),                          \
-        p.dest == Hf::Policy::DestType::INPUT ?                                                 \
-            (!p.interface.in.empty() ? p.interface.in: "null"): (!p.interface.out.empty() ?     \
-                p.interface.out: "null"),                                                       \
-        static_cast<std::underlying_type_t<decltype(p.pro)>>(p.pro) != 0 ?                      \
-            static_cast<std::underlying_type_t<decltype(p.pro)>>(p.pro) : 0,                    \
-        !p.mac.src.empty() ? p.mac.src : "null",                                                \
-        p.dest == Hf::Policy::DestType::INPUT ?                                                 \
-            (p.ipaddr.src ? p.ipaddr.src : 0): (p.ipaddr.dest ? p.ipaddr.dest : 0),             \
-        p.port.src ? p.port.src : 0,                                                            \
-        p.port.dest ? p.port.dest : 0,                                                          \
-        static_cast<std::underlying_type_t<decltype(p.target)>>(p.target)                       \
-    )
-
-
 namespace Hf {
 
 template<typename T>
@@ -185,4 +166,22 @@ void PolicyDB::changes(std::string_view tableName) {
         return 0;
     });
 }
+
+#define TABLENAME "POLICY"
+
+#define MAKE_TUPLE(p)                                                                           \
+    std::make_tuple(                                                                            \
+        static_cast<std::underlying_type_t<decltype((p).dest)>>((p).dest),                      \
+        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
+        (!(p).interface.in.empty() ? (p).interface.in: "null"): (!(p).interface.out.empty() ?   \
+            (p).interface.out: "null"),                                                         \
+        static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) != 0 ?                  \
+            static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) : 0,                \
+        !(p).mac.src.empty() ? (p).mac.src : "null",                                            \
+        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
+            ((p).ipaddr.src ? (p).ipaddr.src : 0): ((p).ipaddr.dest ? (p).ipaddr.dest : 0),     \
+        (p).port.src ? (p).port.src : 0,                                                        \
+        (p).port.dest ? (p).port.dest : 0,                                                      \
+        static_cast<std::underlying_type_t<decltype((p).target)>>((p).target)                   \
+    )
 }
