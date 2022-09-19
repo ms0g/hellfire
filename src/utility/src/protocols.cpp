@@ -21,6 +21,6 @@ std::string_view protNtop(ProtType pro) {
         if (pro == p.second)
             return p.first;
     }
-    return "";
+    return {};
 }
 }

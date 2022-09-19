@@ -71,6 +71,7 @@ std::string toDestPf(std::string_view n) {
         case Policy::DestType::OUTPUT:
             return "OUTPUT";
     }
+    return {};
 }
 
 std::string toTargetPf(std::string_view n) {
@@ -80,6 +81,7 @@ std::string toTargetPf(std::string_view n) {
         case Policy::TargetType::DROP:
             return "DROP";
     }
+    return {};
 }
 
 }//namespace Hf
