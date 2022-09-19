@@ -4,7 +4,6 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "policy.h"
 
 #define DEV_NAME "/dev/hellfire"
 
