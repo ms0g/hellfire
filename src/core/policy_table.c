@@ -249,16 +249,18 @@ int hfCheckInf(HfPolicy* entry, const char* in) {
 
 int hfCheckIp(HfPolicy* entry, u32 ip) {
     switch (entry->dest) {
-        case INPUT:
+        case INPUT: {
             if (entry->ipaddr.src && ip) {
                 return entry->ipaddr.src == ip ? HFSUCCESS : HFNOMATCH;
             }
             break;
-        case OUTPUT:
+        }
+        case OUTPUT: {
             if (entry->ipaddr.dest && ip) {
                 return entry->ipaddr.dest == ip ? HFSUCCESS : HFNOMATCH;
             }
             break;
+        }
     }
     return HFNOOP;
 }
@@ -282,18 +284,20 @@ int hfCheckPro(HfPolicy* entry, u8 pro, int state, u16 sport, u16 dport) {
 
 int hfCheckPort(HfPolicy* entry, u16 sport, u16 dport) {
     switch (entry->dest) {
-        case INPUT:
+        case INPUT: {
             if (entry->port.dest && dport) {
                 return entry->port.dest == dport ? HFSUCCESS : HFNOMATCH;
             }
             break;
-        case OUTPUT:
+        }
+        case OUTPUT: {
             if (entry->port.dest && dport) {
                 return entry->port.dest == dport ? HFSUCCESS : HFNOMATCH;
             } else if (entry->port.src && sport) {
                 return entry->port.src == sport ? HFSUCCESS : HFNOMATCH;
             }
             break;
+        }
     }
     return HFNOOP;
 }

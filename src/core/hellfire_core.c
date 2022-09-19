@@ -57,7 +57,7 @@ static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
     memset(&q, 0, sizeof(HfQuery));
 
     switch (cmd) {
-        case HF_IOC_POL_DEL:
+        case HF_IOC_POL_DEL: {
             printk(KERN_INFO "%s ioctl: HF_IOC_POL_DEL\n", DEV_NAME);
 
             if((n = copy_from_user(device_buffer, (char*) arg, 100)) != 0) {
@@ -82,10 +82,12 @@ static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
             }
 
             break;
-        case HF_IOC_POL_FLUSH:
+        }
+        case HF_IOC_POL_FLUSH: {
             hfCleanPolicyTable();
             printk(KERN_INFO "%s: flushed policy table\n", DEV_NAME);
             break;
+        }
     }
     return 0;
 }

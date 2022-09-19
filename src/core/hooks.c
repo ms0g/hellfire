@@ -39,21 +39,24 @@ unsigned int hfIpIngressHook(void* priv, struct sk_buff* skb, const struct nf_ho
         pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, iph->protocol, sip, 0, 0, 0, 0);
     } else {
         switch (iph->protocol) {
-            case IPPROTO_UDP:
+            case IPPROTO_UDP: {
                 udp = udp_hdr(skb);
                 sport = ntohs(udp->source);
                 dport = ntohs(udp->dest);
                 break;
-            case IPPROTO_TCP:
+            }
+            case IPPROTO_TCP: {
                 tcp = tcp_hdr(skb);
                 sport = ntohs(tcp->source);
                 dport = ntohs(tcp->dest);
                 break;
-            case IPPROTO_SCTP:
+            }
+            case IPPROTO_SCTP: {
                 sctp = sctp_hdr(skb);
                 sport = ntohs(sctp->source);
                 dport = ntohs(sctp->dest);
                 break;
+            }
         }
         pol = hfFindPolicy(0, INPUT, dev->name, NULL, sha, iph->protocol, sip, 0, sport, dport, 0);
 
@@ -94,21 +97,24 @@ unsigned int hfIpEgressHook(void* priv, struct sk_buff* skb, const struct nf_hoo
         pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, iph->protocol, 0, dip, 0, 0, 0);
     } else {
         switch (iph->protocol) {
-            case IPPROTO_UDP:
+            case IPPROTO_UDP: {
                 udp = udp_hdr(skb);
                 sport = ntohs(udp->source);
                 dport = ntohs(udp->dest);
                 break;
-            case IPPROTO_TCP:
+            }
+            case IPPROTO_TCP: {
                 tcp = tcp_hdr(skb);
                 sport = ntohs(tcp->source);
                 dport = ntohs(tcp->dest);
                 break;
-            case IPPROTO_SCTP:
+            }
+            case IPPROTO_SCTP: {
                 sctp = sctp_hdr(skb);
                 sport = ntohs(sctp->source);
                 dport = ntohs(sctp->dest);
                 break;
+            }
         }
         pol = hfFindPolicy(0, OUTPUT, NULL, dev->name, NULL, iph->protocol, 0, dip, sport, dport, 0);
     }
