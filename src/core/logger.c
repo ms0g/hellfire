@@ -1,5 +1,6 @@
 #include "logger.h"
 #include "protocols.h"
+#include "policy_table.h"
 
 static char* log_tmp = "hellfire-Dropped: %s IN:%s OUT:%s MAC:%s:%s SRC:%s DST:%s PROTO:%s LEN:%u TOS:0x%08x "
                        "TTL:%u SPT:%d DPT:%d\n";
