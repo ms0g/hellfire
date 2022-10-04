@@ -36,7 +36,7 @@ static int hfOpen(struct inode* inode, struct file* filp);
 
 static ssize_t hfWrite(struct file* filp, const char __user* buf, size_t len, loff_t* offp);
 
-static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg);
+static long hfIOctl(struct file* filp, unsigned int cmd, unsigned long arg);
 
 static int hfRelease(struct inode* inode, struct file* filp);
 
@@ -51,7 +51,7 @@ static int hfRelease(struct inode* inode, struct file* filp) {
     return 0;
 }
 
-static long hfIoctl(struct file* filp, unsigned int cmd, unsigned long arg) {
+static long hfIOctl(struct file* filp, unsigned int cmd, unsigned long arg) {
     size_t n;
     HfQuery q;
     memset(&q, 0, sizeof(HfQuery));
@@ -111,7 +111,7 @@ static ssize_t hfWrite(struct file* filp, const char __user* buf, size_t len, lo
 static const struct file_operations fops = {    /* these are the file operations provided by our driver */
         .owner = THIS_MODULE,                   /* prevents unloading when operations are in use */
         .open = hfOpen,                        /* to open the device */
-        .unlocked_ioctl = hfIoctl,             /* for another operations */
+        .unlocked_ioctl = hfIOctl,             /* for another operations */
         .write = hfWrite,                      /* to write to the device */
         .release = hfRelease,                  /* to close the device */
 };
