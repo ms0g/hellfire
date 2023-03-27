@@ -7,4 +7,6 @@ set(SCRIPTS_PATH "scripts/")
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${SCRIPTS_PATH}
         DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/src/cli)
 
-add_subdirectory(src)
+add_subdirectory(cli)
+add_subdirectory(core)
+add_subdirectory(utility)
