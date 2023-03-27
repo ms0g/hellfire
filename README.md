@@ -60,7 +60,7 @@ Flushed the policy table
 Help
 ```bash
 ➜ sudo ./hellfire -h
-Usage:  curser [ -<flag> [<val>] | --<name> [<val>] ]...
+Usage:  hellfire [val | -<flag> [<val>] | --<name> [<val>] ]...
 
    start                       Start firewall
    stop                        Stop firewall
