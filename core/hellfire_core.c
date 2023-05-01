@@ -7,6 +7,7 @@
 #include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/ioctl.h>
+#include <linux/version.h>
 #include "policy_table.h"
 #include "hooks.h"
 
@@ -123,7 +124,11 @@ static int __init hellfire_init(void) {
     ipingressho->hooknum = NF_INET_PRE_ROUTING;         /* incoming packets */
     ipingressho->pf = NFPROTO_IPV4;                     /* IP */
     ipingressho->priority = NF_IP_PRI_FIRST;
-    nf_register_hook(ipingressho);
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        nf_register_net_hook(&init_net, ipingressho);
+    #else
+        nf_register_hook(ipingressho);
+    #endif
     printk(KERN_INFO "%s: IP Ingress hook registered successfully\n", DEV_NAME);
 
     /* Initialize IP Outbound netfilter hook */
@@ -132,7 +137,11 @@ static int __init hellfire_init(void) {
     ipegressho->hooknum = NF_INET_POST_ROUTING;         /* outgoing packets */
     ipegressho->pf = NFPROTO_IPV4;                      /* IP */
     ipegressho->priority = NF_IP_PRI_FIRST;
-    nf_register_hook(ipegressho);
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        nf_register_net_hook(&init_net, ipegressho);
+    #else
+        nf_register_hook(ipegressho);
+    #endif
     printk(KERN_INFO "%s: IP Egress hook registered successfully\n", DEV_NAME);
 
     /* we will get the major number dynamically */
@@ -161,11 +170,20 @@ static int __init hellfire_init(void) {
 
 
 static void __exit hellfire_exit(void) {
-    nf_unregister_hook(ipingressho);
+
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        nf_unregister_net_hook(&init_net, ipingressho);
+    #else
+        nf_unregister_hook(ipingressho);
+    #endif
     kfree(ipingressho);
     printk(KERN_INFO "%s: unregistered IP Ingress hook\n", DEV_NAME);
 
-    nf_unregister_hook(ipegressho);
+    #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        nf_unregister_net_hook(&init_net, ipegressho);
+    #else
+        nf_unregister_hook(ipegressho);
+    #endif    
     kfree(ipegressho);
     printk(KERN_INFO "%s: unregistered IP Egress hook\n", DEV_NAME);
 
