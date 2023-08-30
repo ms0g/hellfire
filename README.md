@@ -1,21 +1,23 @@
-# hellfire
-Hellfire is a toy linux firewall based on [Netfilter](https://www.netfilter.org "The netfilter.org project") which filters TCP/SCTP/UDP/ICMP packets according to user-specified rules.
+# Hellfire: A Linux Toy Firewall based on Netfilter
+Hellfire is a lightweight Linux firewall built upon the [Netfilter](https://www.netfilter.org "The netfilter.org project") framework, designed to filter TCP, SCTP, UDP, and ICMP packets in accordance with user-defined rules.
 
-Hellfire is composed of an user-space program `hellfire` that is a cli tool and a kernel-space module
-`hellfire_core`. Communications between user space and kernel space are done by means of
-the device file `/dev/hellfire` using `ioctl` and `write` syscall.Using `hellfire`, user can specify filtering rules
-that include some of the following fields:
-+ Direction: inbound, outbound
-+ Interface: inbound, outbound
-+ Source: ip address, ip address range, mac address, port number
-+ Destination: ip address, ip address range, port number
-+ Protocol: tcp, udp, sctp, icmp
+### Overview
 
-Each created rule is sent to `hellfire_core` module.The module inserts a new entry
-into the policy table to compare every packets with user-specified rules. 
-When the fields of the packet match one of the rules, the packet is dropped.
+Comprising a user-space command-line tool named `hellfire` and a corresponding kernel-space module `hellfire_core`, Hellfire enables the creation of rules to control packet flow. Communication between these spaces is facilitated through the `/dev/hellfire device` file, employing `ioctl` and write `syscalls`.
+
+### Features
+With Hellfire, users can craft filtering rules specifying various attributes:
+
++ **Direction:** Inbound or Outbound
++ **Interface:** Inbound or Outbound
++ **Source:** IP address, IP address range, MAC address, port number
++ **Destination:** IP address, IP address range, port number
++ **Protocol:** TCP, UDP, SCTP, ICMP
+  
+Each rule generated is dispatched to the `hellfire_core` module. This kernel module then inserts a fresh entry into the policy table, enabling the comparison of incoming packets against user-defined rules. In cases where packet attributes correspond to a defined rule, the packet is subsequently discarded.
 
 Built with kernel 4.4.0-210-generic on Ubuntu 16.04.7 LTS
+
 ### Prerequisites
 + [CMake](http://www.cmake.org "CMake project page") (>= 3.20)
 + [g++](https://gcc.gnu.org "GCC, the GNU Compiler Collection") (>=7.5.0)
@@ -27,6 +29,11 @@ cd build
 ```
 
 ### Usage
+
++ Install Hellfire and the necessary kernel module.
++ Use the `hellfire` CLI tool to create filtering rules, specifying the attributes as needed.
++ The `hellfire_core` module enforces these rules by inserting entries into the policy table.
+
 Start
 ```bash
 ➜ sudo ./hellfire start
@@ -35,6 +42,8 @@ Stop
 ```bash
 ➜ sudo ./hellfire stop
 ```
+### Example
+
 ADD rules
 ```bash
 ➜ sudo ./hellfire -A INPUT -i enp0s8 -s 192.168.56.17 -p icmp -t DROP
@@ -83,3 +92,9 @@ Usage:  hellfire [val | -<flag> [<val>] | --<name> [<val>] ]...
    -h, --help                  Display usage information and exit
    -v, --version               Display version information and exit
 ```
+### Contribution
+
+Contributions are welcome! Feel free to fork this repository, make improvements, and submit pull requests.
+
+### License
+Hellfire is licensed under the MIT License.
