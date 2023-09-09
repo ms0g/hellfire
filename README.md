@@ -16,8 +16,6 @@ With Hellfire, users can craft filtering rules specifying various attributes:
   
 Each rule generated is dispatched to the `hellfire_core` module. This kernel module then inserts a fresh entry into the policy table, enabling the comparison of incoming packets against user-defined rules. In cases where packet attributes correspond to a defined rule, the packet is subsequently discarded.
 
-Built with kernel 4.4.0-210-generic on Ubuntu 16.04.7 LTS
-
 ### Prerequisites
 + [CMake](http://www.cmake.org "CMake project page") (>= 3.20)
 + [g++](https://gcc.gnu.org "GCC, the GNU Compiler Collection") (>=7.5.0)
