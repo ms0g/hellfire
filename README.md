@@ -3,7 +3,7 @@ Hellfire is a lightweight Linux firewall built upon the [Netfilter](https://www.
 
 ### Overview
 
-Comprising a user-space command-line tool named `hellfire` and a corresponding kernel-space module `hellfire_core`, Hellfire enables the creation of rules to control packet flow. Communication between these spaces is facilitated through the `/dev/hellfire device` file, employing `ioctl` and write `syscalls`.
+Comprising a user-space command-line tool named `hellfire` and a corresponding kernel-space module `hellfire_core`, Hellfire enables the creation of rules to control packet flow. Communication between these spaces is facilitated through the `/dev/hellfire` device file, employing `ioctl` and write `syscalls`.
 
 ### Features
 With Hellfire, users can craft filtering rules specifying various attributes:
