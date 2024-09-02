@@ -1,11 +1,11 @@
 # Hellfire: A Linux Toy Firewall based on Netfilter
 Hellfire is a lightweight Linux firewall built upon the [Netfilter](https://www.netfilter.org "The netfilter.org project") framework, designed to filter TCP, SCTP, UDP, and ICMP packets in accordance with user-defined rules.
 
-### Overview
+## Overview
 
 Comprising a user-space command-line tool named `hellfire` and a corresponding kernel-space module `hellfire_core`, Hellfire enables the creation of rules to control packet flow. Communication between these spaces is facilitated through the `/dev/hellfire` device file, employing `ioctl` and write `syscalls`.
 
-### Features
+## Features
 With Hellfire, users can craft filtering rules specifying various attributes:
 
 + **Direction:** Inbound or Outbound
@@ -16,17 +16,17 @@ With Hellfire, users can craft filtering rules specifying various attributes:
   
 Each rule generated is dispatched to the `hellfire_core` module. This kernel module then inserts a fresh entry into the policy table, enabling the comparison of incoming packets against user-defined rules. In cases where packet attributes correspond to a defined rule, the packet is subsequently discarded.
 
-### Prerequisites
+## Prerequisites
 + [CMake](http://www.cmake.org "CMake project page") (>= 3.20)
 + [g++](https://gcc.gnu.org "GCC, the GNU Compiler Collection") (>=7.5.0)
 
-### Building
+## Building
 ```bash
 cd build
 ./builder.sh
 ```
 
-### Usage
+## Usage
 
 + Install Hellfire and the necessary kernel module.
 + Use the `hellfire` CLI tool to create filtering rules, specifying the attributes as needed.
@@ -90,9 +90,9 @@ Usage:  hellfire [val | -<flag> [<val>] | --<name> [<val>] ]...
    -h, --help                  Display usage information and exit
    -v, --version               Display version information and exit
 ```
-### Contribution
+## Contribution
 
 Contributions are welcome! Feel free to fork this repository, make improvements, and submit pull requests.
 
-### License
+## License
 Hellfire is licensed under the MIT License.
