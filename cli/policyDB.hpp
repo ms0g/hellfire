@@ -7,6 +7,24 @@
 #include "db.h"
 #include "policy.h"
 
+#define TABLENAME "POLICY"
+
+#define MAKE_PARAMS(p)                                                                          \
+    std::make_tuple(                                                                            \
+        static_cast<std::underlying_type_t<decltype((p).dest)>>((p).dest),                      \
+        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
+        (!(p).interface.in.empty() ? (p).interface.in: "null"): (!(p).interface.out.empty() ?   \
+            (p).interface.out: "null"),                                                         \
+        static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) != 0 ?                  \
+            static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) : 0,                \
+        !(p).mac.src.empty() ? (p).mac.src : "null",                                            \
+        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
+            ((p).ipaddr.src ? (p).ipaddr.src : 0): ((p).ipaddr.dest ? (p).ipaddr.dest : 0),     \
+        (p).port.src ? (p).port.src : 0,                                                        \
+        (p).port.dest ? (p).port.dest : 0,                                                      \
+        static_cast<std::underlying_type_t<decltype((p).target)>>((p).target)                   \
+    )
+
 namespace Hf {
 
 template<typename T>
@@ -29,13 +47,13 @@ public:
     void createTable(std::string_view tableName, Params&& ...params);
 
     template<typename ... Params>
-    void insert(std::string_view tableName, std::tuple<Params...> p);
+    void insert(std::string_view tableName, std::tuple<Params...> params);
 
     template<typename ... Params>
-    void read(std::string_view tableName, std::tuple<Params...> p);
+    void read(std::string_view tableName, std::tuple<Params...> params);
 
     template<typename ... Params>
-    void del(std::string_view tableName, std::tuple<Params...> p);
+    void del(std::string_view tableName, std::tuple<Params...> params);
 
     void flush(std::string_view tableName);
 
@@ -60,47 +78,47 @@ void PolicyDB::createTable(std::string_view tableName, Params&& ... params) {
 }
 
 template<typename ... Params>
-void PolicyDB::insert(std::string_view tableName, std::tuple<Params...> p) {
+void PolicyDB::insert(std::string_view tableName, std::tuple<Params...> params) {
     std::stringstream ss;
     ss << "INSERT INTO " << tableName << "(DEST,INTERFACE,PROTOCOL,MAC,IP,SPT,DPT,TARGET)" << " VALUES(";
-    ss << std::get<0>(p) << ","
-       << "'" << std::get<1>(p) << "'" << ","
-       << std::get<2>(p) << ","
-       << "'" << std::get<3>(p) << "'" << ","
-       << std::get<4>(p) << ","
-       << std::get<5>(p) << ","
-       << std::get<6>(p) << ","
-       << std::get<7>(p);
+    ss << std::get<0>(params) << ","
+       << "'" << std::get<1>(params) << "'" << ","
+       << std::get<2>(params) << ","
+       << "'" << std::get<3>(params) << "'" << ","
+       << std::get<4>(params) << ","
+       << std::get<5>(params) << ","
+       << std::get<6>(params) << ","
+       << std::get<7>(params);
     ss << ");";
 
     m_db->exec(ss.str().c_str(), nullptr);
 }
 
 template<typename... Params>
-void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
+void PolicyDB::read(std::string_view tableName, std::tuple<Params...> params) {
     std::stringstream ss;
     ss << "SELECT * FROM " << tableName << " WHERE ";
-    ss << "DEST=" << std::get<0>(p);
-    if (std::get<1>(p) != "null") {
-        ss << " AND INTERFACE=" << "'" << std::get<1>(p) << "'";
+    ss << "DEST=" << std::get<0>(params);
+    if (std::get<1>(params) != "null") {
+        ss << " AND INTERFACE=" << "'" << std::get<1>(params) << "'";
     }
-    if (std::get<2>(p)) {
-        ss << " AND PROTOCOL=" << std::get<2>(p);
+    if (std::get<2>(params)) {
+        ss << " AND PROTOCOL=" << std::get<2>(params);
     }
-    if (std::get<3>(p) != "null") {
-        ss << " AND MAC=" << "'" << std::get<3>(p) << "'";
+    if (std::get<3>(params) != "null") {
+        ss << " AND MAC=" << "'" << std::get<3>(params) << "'";
     }
-    if (std::get<4>(p)) {
-        ss << " AND IP=" << std::get<4>(p);
+    if (std::get<4>(params)) {
+        ss << " AND IP=" << std::get<4>(params);
     }
-    if (std::get<5>(p)) {
-        ss << " AND SPT=" << std::get<5>(p);
+    if (std::get<5>(params)) {
+        ss << " AND SPT=" << std::get<5>(params);
     }
-    if (std::get<6>(p)) {
-        ss << " AND DPT=" << std::get<6>(p);
+    if (std::get<6>(params)) {
+        ss << " AND DPT=" << std::get<6>(params);
     }
-    if (std::get<7>(p)) {
-        ss << " AND TARGET=" << std::get<7>(p);
+    if (std::get<7>(params)) {
+        ss << " AND TARGET=" << std::get<7>(params);
     }
     m_db->exec(ss.str().c_str(), [](void* data, int argc, char** argv, char** colName) {
         for (int i = 0; i < argc; i++) {
@@ -122,30 +140,30 @@ void PolicyDB::read(std::string_view tableName, std::tuple<Params...> p) {
 }
 
 template<typename... Params>
-void PolicyDB::del(std::string_view tableName, std::tuple<Params...> p) {
+void PolicyDB::del(std::string_view tableName, std::tuple<Params...> params) {
     std::stringstream ss;
     ss << "DELETE FROM " << tableName << " WHERE ";
-    ss << "DEST=" << std::get<0>(p);
-    if (std::get<1>(p) != "null") {
-        ss << " AND INTERFACE=" << "'" << std::get<1>(p) << "'";
+    ss << "DEST=" << std::get<0>(params);
+    if (std::get<1>(params) != "null") {
+        ss << " AND INTERFACE=" << "'" << std::get<1>(params) << "'";
     }
-    if (std::get<2>(p)) {
-        ss << " AND PROTOCOL=" << std::get<2>(p);
+    if (std::get<2>(params)) {
+        ss << " AND PROTOCOL=" << std::get<2>(params);
     }
-    if (std::get<3>(p) != "null") {
-        ss << " AND MAC=" << "'" << std::get<3>(p) << "'";
+    if (std::get<3>(params) != "null") {
+        ss << " AND MAC=" << "'" << std::get<3>(params) << "'";
     }
-    if (std::get<4>(p)) {
-        ss << " AND IP=" << std::get<4>(p);
+    if (std::get<4>(params)) {
+        ss << " AND IP=" << std::get<4>(params);
     }
-    if (std::get<5>(p)) {
-        ss << " AND SPT=" << std::get<5>(p);
+    if (std::get<5>(params)) {
+        ss << " AND SPT=" << std::get<5>(params);
     }
-    if (std::get<6>(p)) {
-        ss << " AND DPT=" << std::get<6>(p);
+    if (std::get<6>(params)) {
+        ss << " AND DPT=" << std::get<6>(params);
     }
-    if (std::get<7>(p)) {
-        ss << " AND TARGET=" << std::get<7>(p);
+    if (std::get<7>(params)) {
+        ss << " AND TARGET=" << std::get<7>(params);
     }
     m_db->exec(ss.str().c_str(), nullptr);
 }
@@ -166,22 +184,4 @@ void PolicyDB::changes(std::string_view tableName) {
         return 0;
     });
 }
-
-#define TABLENAME "POLICY"
-
-#define MAKE_TUPLE(p)                                                                           \
-    std::make_tuple(                                                                            \
-        static_cast<std::underlying_type_t<decltype((p).dest)>>((p).dest),                      \
-        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
-        (!(p).interface.in.empty() ? (p).interface.in: "null"): (!(p).interface.out.empty() ?   \
-            (p).interface.out: "null"),                                                         \
-        static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) != 0 ?                  \
-            static_cast<std::underlying_type_t<decltype((p).pro)>>((p).pro) : 0,                \
-        !(p).mac.src.empty() ? (p).mac.src : "null",                                            \
-        (p).dest == Hf::Policy::DestType::INPUT ?                                               \
-            ((p).ipaddr.src ? (p).ipaddr.src : 0): ((p).ipaddr.dest ? (p).ipaddr.dest : 0),     \
-        (p).port.src ? (p).port.src : 0,                                                        \
-        (p).port.dest ? (p).port.dest : 0,                                                      \
-        static_cast<std::underlying_type_t<decltype((p).target)>>((p).target)                   \
-    )
 }

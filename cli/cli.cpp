@@ -197,13 +197,13 @@ int main(int argc, char** argv) {
                 if (iocdev.bulkWrite(bulk_policies)) {
                     for (const auto& pol: bulk_policies) {
                         Hf::Policy p{pol};
-                        policyDb.insert(TABLENAME, MAKE_TUPLE(p));
+                        policyDb.insert(TABLENAME, MAKE_PARAMS(p));
                     }
                 }
             } else {
                 if (iocdev.write(ss.str())) {
                     Hf::Policy p{ss.str()};
-                    policyDb.insert(TABLENAME, MAKE_TUPLE(p));
+                    policyDb.insert(TABLENAME, MAKE_PARAMS(p));
                 }
             }
             break;
@@ -211,13 +211,13 @@ int main(int argc, char** argv) {
         case Hf::Command::DELETE: {
             if (iocdev.del(ss.str())) {
                 Hf::Policy p{ss.str()};
-                policyDb.del(TABLENAME, MAKE_TUPLE(p));
+                policyDb.del(TABLENAME, MAKE_PARAMS(p));
             }
             break;
         }
         case Hf::Command::LIST: {
             Hf::Policy p{ss.str()};
-            policyDb.read(TABLENAME, MAKE_TUPLE(p));
+            policyDb.read(TABLENAME, MAKE_PARAMS(p));
             break;
         }
         case Hf::Command::FLUSH:
