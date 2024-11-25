@@ -1,5 +1,4 @@
 # Hellfire: A Linux Toy Firewall based on Netfilter
-## Overview
 Hellfire is a lightweight Linux firewall built upon the [Netfilter](https://www.netfilter.org "The netfilter.org project") framework, designed to filter `TCP`, `SCTP`, `UDP`, and `ICMP` packets in accordance with user-defined rules. You can use a command-line tool named `hellfire` to create the rules to control packet flow. Each rule generated is dispatched to the `hellfire_core` module. This kernel module then inserts a new entry into the policy table, enabling the comparison of incoming packets against user-defined rules. In cases where packet attributes correspond to a defined rule, the packet is subsequently dropped.
 
 ## Features
